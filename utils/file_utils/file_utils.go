@@ -3,7 +3,7 @@ package file_utils
 import (
 	"bytes"
 	"errors"
-	"github.com/spacetimi/server/timi_shared/utils/logger"
+	"github.com/spacetimi/timi_shared_server/utils/logger"
 	"net/http"
 	"strconv"
 )

@@ -2,8 +2,8 @@ package controllers
 
 import (
 	"fmt"
-	"github.com/spacetimi/server/timi_shared/code/config"
-	"github.com/spacetimi/server/timi_shared/code/core/adaptors/redis_adaptor"
+	"github.com/spacetimi/timi_shared_server/code/config"
+	"github.com/spacetimi/timi_shared_server/code/core/adaptors/redis_adaptor"
 	"log"
 	"math/rand"
 	"net/http"

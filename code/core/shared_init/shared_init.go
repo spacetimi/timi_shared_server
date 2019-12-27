@@ -1,10 +1,10 @@
 package shared_init
 
 import (
-	"github.com/spacetimi/server/timi_shared/code/config"
-	"github.com/spacetimi/server/timi_shared/code/core/adaptors/mongo_wrapper"
-	"github.com/spacetimi/server/timi_shared/code/core/adaptors/redis_adaptor"
-	"github.com/spacetimi/server/timi_shared/code/core/services/metadata_service"
+	"github.com/spacetimi/timi_shared_server/code/config"
+	"github.com/spacetimi/timi_shared_server/code/core/adaptors/mongo_wrapper"
+	"github.com/spacetimi/timi_shared_server/code/core/adaptors/redis_adaptor"
+	"github.com/spacetimi/timi_shared_server/code/core/services/metadata_service"
 )
 
 func SharedInit(appInitializer IAppInitializer) {

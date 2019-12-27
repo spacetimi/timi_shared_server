@@ -2,7 +2,7 @@ package config
 
 import (
 	"encoding/json"
-	"github.com/spacetimi/server/timi_shared/utils/logger"
+	"github.com/spacetimi/timi_shared_server/utils/logger"
 	"os"
 	"strings"
 )

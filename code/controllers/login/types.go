@@ -3,7 +3,7 @@ package login
 import (
 	"encoding/json"
 	"errors"
-	"github.com/spacetimi/server/timi_shared/code/core"
+	"github.com/spacetimi/timi_shared_server/code/core"
 	"strconv"
 	"strings"
 )

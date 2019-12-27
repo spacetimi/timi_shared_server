@@ -3,7 +3,7 @@ package redis_adaptor
 import (
 	"fmt"
 	"github.com/go-redis/redis"
-	"github.com/spacetimi/server/timi_shared/code/config"
+	"github.com/spacetimi/timi_shared_server/code/config"
 )
 
 var Client *redis.Client

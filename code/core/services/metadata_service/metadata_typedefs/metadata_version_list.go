@@ -1,6 +1,6 @@
 package metadata_typedefs
 
-import "github.com/spacetimi/server/timi_shared/code/core"
+import "github.com/spacetimi/timi_shared_server/code/core"
 
 type MetadataVersionList struct {
 	Versions []string

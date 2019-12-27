@@ -3,8 +3,8 @@ package api_server
 import (
     "fmt"
     "github.com/gorilla/mux"
-    "github.com/spacetimi/server/timi_shared/code/controllers"
-    "github.com/spacetimi/server/timi_shared/code/controllers/login"
+    "github.com/spacetimi/timi_shared_server/code/controllers"
+    "github.com/spacetimi/timi_shared_server/code/controllers/login"
     "log"
     "net/http"
 )

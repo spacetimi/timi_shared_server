@@ -2,10 +2,10 @@ package metadata_service
 
 import (
     "errors"
-    "github.com/spacetimi/server/timi_shared/code/core"
-    "github.com/spacetimi/server/timi_shared/code/core/services/metadata_service/metadata_fetchers"
-    "github.com/spacetimi/server/timi_shared/code/core/services/metadata_service/metadata_typedefs"
-    "github.com/spacetimi/server/timi_shared/utils/logger"
+    "github.com/spacetimi/timi_shared_server/code/core"
+    "github.com/spacetimi/timi_shared_server/code/core/services/metadata_service/metadata_fetchers"
+    "github.com/spacetimi/timi_shared_server/code/core/services/metadata_service/metadata_typedefs"
+    "github.com/spacetimi/timi_shared_server/utils/logger"
 )
 
 type MetadataServiceSpace struct {

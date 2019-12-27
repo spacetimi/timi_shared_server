@@ -2,8 +2,8 @@ package mongo_wrapper
 
 import (
 	"context"
-	"github.com/spacetimi/server/timi_shared/code/config"
-	"github.com/spacetimi/server/timi_shared/utils/logger"
+	"github.com/spacetimi/timi_shared_server/code/config"
+	"github.com/spacetimi/timi_shared_server/utils/logger"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"

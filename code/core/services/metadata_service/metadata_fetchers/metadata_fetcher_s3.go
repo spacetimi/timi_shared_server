@@ -3,9 +3,9 @@ package metadata_fetchers
 import (
     "encoding/json"
     "errors"
-    "github.com/spacetimi/server/timi_shared/code/core/services/metadata_service/metadata_typedefs"
-    "github.com/spacetimi/server/timi_shared/utils/file_utils"
-    "github.com/spacetimi/server/timi_shared/utils/logger"
+    "github.com/spacetimi/timi_shared_server/code/core/services/metadata_service/metadata_typedefs"
+    "github.com/spacetimi/timi_shared_server/utils/file_utils"
+    "github.com/spacetimi/timi_shared_server/utils/logger"
 )
 
 type MetadataFetcherS3 struct { // Implements IMetadataFetcher
