@@ -10,6 +10,7 @@ import (
 )
 
 
+// TODO: Avi: Remove these controllers
 func StartServer(testingController func(w http.ResponseWriter, response *http.Request),
                  dummyController func(w http.ResponseWriter, response *http.Request)) {
 
@@ -32,9 +33,7 @@ func StartServer(testingController func(w http.ResponseWriter, response *http.Re
     router.HandleFunc("/testing/{param1}/{param2}", testingController).Methods("GET", "POST")
     router.HandleFunc("/testing/{param1}/{param2}/{param3}", testingController).Methods("GET", "POST")
 
-
-    fmt.Println("Server started on port 8000")
+    fmt.Println("API Server Started on port 8000")
     log.Fatal(http.ListenAndServe(":8000", router))
-
 }
 
