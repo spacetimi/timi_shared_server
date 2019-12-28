@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>[{{ .AppName }}] Admin Page</title>
+</head>
+
+{{ $bgColor := "#FFFFFF" }}
+{{ if eq .AppEnvironment "Local" }}
+{{ $bgColor = "#99FF99" }}
+{{ else if eq .AppEnvironment "Test" }}
+{{ $bgColor = "#35E6EE" }}
+{{ else if eq .AppEnvironment "Staging" }}
+{{ $bgColor = "#F1C40F" }}
+{{ else if eq .AppEnvironment "Production" }}
+{{ $bgColor = "#E74C3C" }}
+{{ end }}
+
+<body bgcolor={{$bgColor}}>
+
+<p>App info</p>
+<p>Environment: {{ .AppEnvironment }}</p>

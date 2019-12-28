@@ -5,4 +5,5 @@ type AdminPageObject struct {
     LoggedInUser string
 
     AppName string
+    AppEnvironment string
 }

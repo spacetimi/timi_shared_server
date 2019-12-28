@@ -11,8 +11,16 @@ import (
 func AdminController(httpResponseWriter http.ResponseWriter, request *http.Request) {
     adminPageObject := AdminPageObject {
         AppName: config.GetAppName(),
+        AppEnvironment: "Unknown",
         IsLoggedIn: false,
         LoggedInUser: "",
+    }
+    switch config.GetEnvironmentConfiguration().AppEnvironment {
+    case config.LOCAL: adminPageObject.AppEnvironment = "Local"
+    case config.TEST: adminPageObject.AppEnvironment = "Test"
+    case config.STAGING: adminPageObject.AppEnvironment = "Staging"
+    case config.PRODUCTION: adminPageObject.AppEnvironment = "Production"
+    default: adminPageObject.AppEnvironment = "Unknown"
     }
 
     switch request.URL.String() {
@@ -66,23 +74,14 @@ func showAdminPage(httpResponseWriter http.ResponseWriter, request *http.Request
 }
 
 func showLoginPage(httpResponseWriter http.ResponseWriter, request *http.Request, adminPageObject AdminPageObject) {
-    t := template.New("admin_login_template.html")
-    templateFilePath := config.GetTemplateFilesPath() + "/admin_tool/" + "admin_login_template.html"
 
-    t, err := t.ParseFiles(templateFilePath)
+    templates, err := template.ParseGlob(config.GetTemplateFilesPath() + "/admin_tool/*")
+    err = templates.ExecuteTemplate(httpResponseWriter, "admin_login_template.html", adminPageObject)
+
     if err != nil {
-        logger.LogError("Error parsing template file" +
-            "|file path=" + templateFilePath +
+        logger.LogError("Error executing templates" +
             "|request url=" + request.URL.String() +
             "|error=" + err.Error())
-        fmt.Fprintf(httpResponseWriter, "Error loading page")
-    }
-    err = t.Execute(httpResponseWriter, adminPageObject)
-    if err != nil {
-        logger.LogError("Error executing template" +
-            "|file path=" + templateFilePath +
-            "|request url=" + request.URL.String() +
-            "|error=" + err.Error())
-        fmt.Fprintf(httpResponseWriter, "Error loading page")
+        httpResponseWriter.WriteHeader(http.StatusInternalServerError)
     }
 }
