@@ -1,5 +1,41 @@
 {{ template "admin_page_header_template.html" . }}
 
-<h1>Login {{.AppName}}</h1>
+<div class="jumbotron">
+<div class="row pt-4">
+
+
+    <div class="col-md-4"></div>
+
+    <div class="col-md-4">
+        <div class="container-fluid bg-dark text-light pt-2 pb-2 border border-info">
+            <h6>Login with Admin Credentials</h6>
+        </div>
+
+        <div class="container-fluid bg-white justify-content-center pt-2 pb-3 border border-info rounded-bottom">
+
+            <div class="input-group mb-3 pt-2">
+                <input type="text" class="form-control" placeholder="username" aria-label="username" aria-describedby="basic-addon2">
+            </div>
+            <div class="input-group mb-3">
+                <input type="text" class="form-control" placeholder="password" aria-label="password" aria-describedby="basic-addon2">
+            </div>
+
+            <div class="row">
+                <div class="col-md-4"></div>
+                <div class="col-md-4">
+                    <div>
+                        <button class="btn btn-info container-fluid" ng-click="$ctrl.onSetDirty()">Login</button>
+                    </div>
+                </div>
+                <div class="col-md-4"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="col-md-4"></div>
+
+</div>
+</div>
 
 {{ template "admin_page_footer_template.html" . }}
