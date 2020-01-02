@@ -6,4 +6,7 @@ type AdminPageObject struct {
 
     AppName string
     AppEnvironment string
+
+    HasError bool
+    ErrorString string
 }

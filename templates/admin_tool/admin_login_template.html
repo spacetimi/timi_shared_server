@@ -13,22 +13,38 @@
 
         <div class="container-fluid bg-white justify-content-center pt-2 pb-3 border border-info rounded-bottom">
 
-            <div class="input-group mb-3 pt-2">
-                <input type="text" class="form-control" placeholder="username" aria-label="username" aria-describedby="basic-addon2">
-            </div>
-            <div class="input-group mb-3">
-                <input type="text" class="form-control" placeholder="password" aria-label="password" aria-describedby="basic-addon2">
-            </div>
+            <form action="/admin/login" method="post">
 
-            <div class="row">
-                <div class="col-md-4"></div>
-                <div class="col-md-4">
-                    <div>
-                        <button class="btn btn-info container-fluid" ng-click="$ctrl.onSetDirty()">Login</button>
-                    </div>
+                {{ if .HasError }}
+                <div>
+                    <p class="text-danger">
+                        {{ if eq .ErrorString "unknown user" }}
+                        Unrecognized username. Please login again.
+                        {{ else if eq .ErrorString "wrong password" }}
+                        Wrong password. Please login again.
+                        {{ else }}
+                        Something went wrong. Please login again.
+                        {{ end }}
+                    </p>
                 </div>
-                <div class="col-md-4"></div>
-            </div>
+                {{ end }}
+
+                <div class="input-group mb-3 pt-2">
+                    <input type="text" name="username" class="form-control" placeholder="username" aria-label="username" aria-describedby="basic-addon2">
+                </div>
+                <div class="input-group mb-3">
+                    <input type="password" name="password" class="form-control" placeholder="password" aria-label="password" aria-describedby="basic-addon2">
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4"></div>
+                    <div class="col-md-4">
+                        <input type="submit" value="Login" class="btn btn-info container-fluid">
+                    </div>
+                    <div class="col-md-4"></div>
+                </div>
+
+            </form>
 
         </div>
     </div>
