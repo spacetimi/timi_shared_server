@@ -35,10 +35,10 @@
 
 <body>
 
-<div class="container-fluid bg-dark pt-2 pb-2">
+<div class="container-fluid bg-dark pt-2 pb-2 pl-2 pr-4">
     <div class="row">
 
-        <div class="col-md-6">
+        <div class="col-md-4">
             {{ if .IsLoggedIn }}
                 <a href="admin">
                     <img src="/images/home.png" class="img-fluid">
@@ -57,6 +57,17 @@
             </span>
         </div>
 
+        {{ if .IsLoggedIn }}
+            <div class="col-md-2 border rounded border-secondary bg-light">
+                    <span class="float-right align-middle">
+                        <h6 class="text-info mt-1 mb-1">
+                            <small>Logged in as: </small>{{ .LoggedInUser }}
+                            <br/>
+                            <a href="admin/logout" class="text-primary float-right">Log out</a>
+                        </h6>
+                    </span>
+            </div>
+        {{ end }}
 
     </div>
 </div>

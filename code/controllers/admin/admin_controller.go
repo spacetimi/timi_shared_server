@@ -6,6 +6,7 @@ import (
     "github.com/spacetimi/timi_shared_server/utils/logger"
     "html/template"
     "net/http"
+    "time"
 )
 
 const kCookieName = "jwtTokenForAdminUser"
@@ -26,6 +27,15 @@ func AdminController(httpResponseWriter http.ResponseWriter, request *http.Reque
     case config.STAGING: adminPageObject.AppEnvironment = "Staging"
     case config.PRODUCTION: adminPageObject.AppEnvironment = "Production"
     default: adminPageObject.AppEnvironment = "Unknown"
+    }
+
+    // If request is for logout, clear cookies and redirect to login page
+
+    if request.URL.Path == "/admin/logout" {
+        cookie := http.Cookie{Name: kCookieName, Value: "", Expires: time.Now()}
+        http.SetCookie(httpResponseWriter, &cookie)
+        http.Redirect(httpResponseWriter, request, "/admin/login", http.StatusSeeOther)
+        return
     }
 
     // If request is for the login page, just show that
