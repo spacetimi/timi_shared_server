@@ -36,10 +36,27 @@
 <body>
 
 <div class="container-fluid bg-dark pt-2 pb-2">
-<h6 class="text-light">
-    <small>App Name: </small>{{ .AppName }}
-</h6>
-<h6 class="text-light">
-    <small>Environment: </small>{{ .AppEnvironment }}
-</h6>
+    <div class="row">
+
+        <div class="col-md-6">
+            {{ if .IsLoggedIn }}
+                <a href="admin">
+                    <img src="/images/home.png" class="img-fluid">
+                </a>
+            {{ end }}
+        </div>
+
+        <div class="col-md-6">
+            <span class="float-right">
+                <h6 class="text-light">
+                    <small>App Name: </small>{{ .AppName }}
+                </h6>
+                <h6 class="text-light">
+                    <small>Environment: </small>{{ .AppEnvironment }}
+                </h6>
+            </span>
+        </div>
+
+
+    </div>
 </div>

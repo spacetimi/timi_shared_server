@@ -2,7 +2,6 @@ package admin
 
 import (
     "errors"
-    "fmt"
     "github.com/spacetimi/timi_shared_server/code/config"
     "github.com/spacetimi/timi_shared_server/utils/logger"
     "html/template"
@@ -140,28 +139,5 @@ func showLoginPage(httpResponseWriter http.ResponseWriter, request *http.Request
             "|request url=" + request.URL.String() +
             "|error=" + err.Error())
         httpResponseWriter.WriteHeader(http.StatusInternalServerError)
-    }
-}
-
-func showAdminPage(httpResponseWriter http.ResponseWriter, request *http.Request, adminPageObject AdminPageObject) {
-
-    t := template.New("admin_tool_template.html")
-    templateFilePath := config.GetTemplateFilesPath() + "/admin_tool/" + "admin_tool_template.html"
-
-    t, err := t.ParseFiles(templateFilePath)
-    if err != nil {
-        logger.LogError("Error parsing template file" +
-            "|file path=" + templateFilePath +
-            "|request url=" + request.URL.String() +
-            "|error=" + err.Error())
-        fmt.Fprintf(httpResponseWriter, "Error loading page")
-    }
-    err = t.Execute(httpResponseWriter, adminPageObject)
-    if err != nil {
-        logger.LogError("Error executing template" +
-            "|file path=" + templateFilePath +
-            "|request url=" + request.URL.String() +
-            "|error=" + err.Error())
-        fmt.Fprintf(httpResponseWriter, "Error loading page")
     }
 }
