@@ -1,9 +1,11 @@
-package api_server
+package server
 
 import (
     "fmt"
     "github.com/gorilla/mux"
+    "github.com/spacetimi/timi_shared_server/code/config"
     "github.com/spacetimi/timi_shared_server/code/controllers"
+    "github.com/spacetimi/timi_shared_server/code/controllers/admin"
     "github.com/spacetimi/timi_shared_server/code/controllers/login"
     "log"
     "net/http"
@@ -33,7 +35,17 @@ func StartServer(testingController func(w http.ResponseWriter, response *http.Re
     router.HandleFunc("/testing/{param1}/{param2}", testingController).Methods("GET", "POST")
     router.HandleFunc("/testing/{param1}/{param2}/{param3}", testingController).Methods("GET", "POST")
 
-    fmt.Println("API Server Started on port 8000")
+    // Admin server
+    router.HandleFunc("/admin", admin.AdminController).Methods("GET", "POST")
+    router.HandleFunc("/admin/", admin.AdminController).Methods("GET", "POST")
+    router.HandleFunc("/admin/{param1}", admin.AdminController).Methods("GET", "POST")
+
+    // Set up static file-server for images
+    router.PathPrefix("/images/").
+        Handler(http.StripPrefix("/images/", http.FileServer(http.Dir(config.GetImageFilesPath()))))
+
+
+    fmt.Println("Server Started on port 8000")
     log.Fatal(http.ListenAndServe(":8000", router))
 }
 
