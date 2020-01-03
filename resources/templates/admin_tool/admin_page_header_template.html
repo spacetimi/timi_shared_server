@@ -46,7 +46,11 @@
             {{ end }}
         </div>
 
+        {{ if .IsLoggedIn }}
         <div class="col-md-6">
+        {{ else }}
+        <div class="col-md-8">
+        {{ end }}
             <span class="float-right">
                 <h6 class="text-light">
                     <small>App Name: </small>{{ .AppName }}
