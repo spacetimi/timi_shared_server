@@ -20,6 +20,6 @@ func StartServer() {
     router.PathPrefix("/images/").
         Handler(http.StripPrefix("/images/", http.FileServer(http.Dir(config.GetImageFilesPath()))))
 
-    fmt.Println("Admin Server Started on port 9000")
-    log.Fatal(http.ListenAndServe(":9000", router))
+    fmt.Println("Admin Server Started on port 8001")
+    log.Fatal(http.ListenAndServe(":8001", router))
 }
