@@ -1,5 +1,15 @@
 {{ template "admin_page_header_template.html" . }}
 
-<a href="admin/login">Login Please</a>
+<div class="container-fluid p-3">
+
+    <div class="jumbotron bg-light">
+        <form>
+            <button type="submit" formaction="" class="btn btn-primary btn-lg btn-block">Users</button>
+            <button type="submit" formaction="admin/metadata" class="btn btn-primary btn-lg btn-block">Metadata</button>
+            <button type="submit" formaction="" class="btn btn-primary btn-lg btn-block">Events</button>
+        </form>
+    </div>
+
+</div>
 
 {{ template "admin_page_footer_template.html" . }}

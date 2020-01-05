@@ -10,3 +10,7 @@ type AdminPageObject struct {
     HasError bool
     ErrorString string
 }
+
+type AdminMetadataPageObject struct {
+    AdminPageObject
+}

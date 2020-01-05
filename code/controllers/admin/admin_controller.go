@@ -11,6 +11,14 @@ import (
 
 const kCookieName = "jwtTokenForAdminUser"
 
+var kRoutes = map[string]string {
+    "/admin": "home",
+    "/admin/": "home/",
+    "/admin/login": "login",
+    "/admin/logout": "logout",
+    "/admin/metadata": "metadata",
+}
+
 func AdminController(httpResponseWriter http.ResponseWriter, request *http.Request) {
     adminPageObject := AdminPageObject {
         AppName: config.GetAppName(),
@@ -29,9 +37,16 @@ func AdminController(httpResponseWriter http.ResponseWriter, request *http.Reque
     default: adminPageObject.AppEnvironment = "Unknown"
     }
 
+    matchingRoute, ok := kRoutes[request.URL.Path]
+    if !ok {
+        logger.LogWarning("unknown route request|request url=" + request.URL.Path)
+        httpResponseWriter.WriteHeader(http.StatusNotFound)
+        return
+    }
+
     // If request is for logout, clear cookies and redirect to login page
 
-    if request.URL.Path == "/admin/logout" {
+    if matchingRoute == "logout" {
         cookie := http.Cookie{Name: kCookieName, Value: "", Expires: time.Now()}
         http.SetCookie(httpResponseWriter, &cookie)
         http.Redirect(httpResponseWriter, request, "/admin/login", http.StatusSeeOther)
@@ -40,7 +55,7 @@ func AdminController(httpResponseWriter http.ResponseWriter, request *http.Reque
 
     // If request is for the login page, just show that
 
-    if request.URL.Path == "/admin/login" {
+    if matchingRoute == "login" {
         showLoginPage(httpResponseWriter, request, adminPageObject)
         return
     }
@@ -66,10 +81,12 @@ func AdminController(httpResponseWriter http.ResponseWriter, request *http.Reque
     adminPageObject.IsLoggedIn = true
     adminPageObject.LoggedInUser = username
 
-    switch request.URL.String() {
+    switch matchingRoute {
 
-    case "/admin": showAdminPage(httpResponseWriter, request, adminPageObject)
-    case "/admin/": showAdminPage(httpResponseWriter, request, adminPageObject)
+    case "home": showAdminPage(httpResponseWriter, request, adminPageObject)
+    case "home/": showAdminPage(httpResponseWriter, request, adminPageObject)
+
+    case "metadata": showAdminMetadataPage(httpResponseWriter, request, adminPageObject)
 
     default:
         logger.LogWarning("unknown route request for admin controller" +
