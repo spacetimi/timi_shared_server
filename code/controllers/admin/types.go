@@ -9,8 +9,20 @@ type AdminPageObject struct {
 
     HasError bool
     ErrorString string
+
+    NavBackLinks []NavBackLink
+}
+
+type NavBackLink struct {
+    LinkName string
+    Href string
 }
 
 type AdminMetadataPageObject struct {
     AdminPageObject
+    MetadataInfo
+}
+
+type MetadataInfo struct {
+    Space string
 }

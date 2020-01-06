@@ -39,6 +39,7 @@ func StartServer(testingController func(w http.ResponseWriter, response *http.Re
     router.HandleFunc("/admin", admin.AdminController).Methods("GET", "POST")
     router.HandleFunc("/admin/", admin.AdminController).Methods("GET", "POST")
     router.HandleFunc("/admin/{param1}", admin.AdminController).Methods("GET", "POST")
+    router.HandleFunc("/admin/{param1}/{param2}", admin.AdminController).Methods("GET", "POST")
 
     // Set up static file-server for images
     router.PathPrefix("/images/").

@@ -38,18 +38,22 @@
 <div class="container-fluid bg-dark pt-2 pb-2 pl-2 pr-4">
     <div class="row">
 
-        <div class="col-md-4">
+        <div class="col-md-7">
             {{ if .IsLoggedIn }}
                 <a href="/admin">
                     <img src="/images/home.png" class="img-fluid">
                 </a>
+                    {{ range $navBackLink := .NavBackLinks }}
+                        <a class="text-info" href={{ $navBackLink.Href }}>/ <u>{{ $navBackLink.LinkName }}</u> </a>
+                    {{ end }}
             {{ end }}
         </div>
 
+
         {{ if .IsLoggedIn }}
-        <div class="col-md-6">
+        <div class="col-md-3">
         {{ else }}
-        <div class="col-md-8">
+        <div class="col-md-5">
         {{ end }}
             <span class="float-right">
                 <h6 class="text-light">
@@ -67,7 +71,7 @@
                         <h6 class="text-light mt-1 mb-1">
                             <small>Logged in as: </small>{{ .LoggedInUser }}
                             <br/>
-                            <a href="admin/logout" class="text-warning float-right"><u>Log out</u></a>
+                            <a href="/admin/logout" class="text-warning float-right"><u>Log out</u></a>
                         </h6>
                     </span>
             </div>
