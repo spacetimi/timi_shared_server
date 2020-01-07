@@ -23,8 +23,9 @@
                             <span class="badge badge-secondary">Current Versions:</span>
                             <br/>
                             <h4>
-                            <span class="badge badge-success">1.0</span>
-                            <span class="badge badge-success">1.1</span>
+                                {{ range $currentVersion := .MetadataInfo.CurrentVersions }}
+                                    <span class="badge badge-success">{{ $currentVersion }}</span>
+                                {{ end}}
                             </h4>
                         </div>
 

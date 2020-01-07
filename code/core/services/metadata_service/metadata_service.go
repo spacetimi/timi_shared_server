@@ -28,13 +28,15 @@ func Instance() *MetadataService {
 	return instance
 }
 
-func (ms *MetadataService) IsMetadataHashUpToDate(key string, hash string, space metadata_typedefs.MetadataSpace, version *core.AppVersion) (bool, error) {
-	var msa *MetadataServiceSpace
 
-	switch space {
-	case metadata_typedefs.METADATA_SPACE_SHARED: msa = ms.sharedMDServiceSpace
-	case metadata_typedefs.METADATA_SPACE_APP: msa = ms.appMDServiceSpace
-	}
+func (ms *MetadataService) GetCurrentVersions(space metadata_typedefs.MetadataSpace) []string {
+    msa := ms.getMetadataServiceSpace(space)
+
+    return msa.mdVersionList.CurrentVersions
+}
+
+func (ms *MetadataService) IsMetadataHashUpToDate(key string, hash string, space metadata_typedefs.MetadataSpace, version *core.AppVersion) (bool, error) {
+	msa := ms.getMetadataServiceSpace(space)
 
 	if msa == nil {
 		logger.LogError("unknown metadata space|metadata_space=" + space.String())
@@ -60,12 +62,7 @@ func (ms *MetadataService) GetMetadataItem(itemPtr metadata_typedefs.IMetadataIt
 		return errors.New("itemPtr is null")
 	}
 
-	var msa *MetadataServiceSpace
-
-	switch itemPtr.GetMetadataSpace() {
-	case metadata_typedefs.METADATA_SPACE_SHARED: msa = ms.sharedMDServiceSpace
-	case metadata_typedefs.METADATA_SPACE_APP: msa = ms.appMDServiceSpace
-	}
+	msa := ms.getMetadataServiceSpace(itemPtr.GetMetadataSpace())
 
 	if msa == nil {
 		logger.LogError("unknown metadata space|metadata_space=" + itemPtr.GetMetadataSpace().String())
@@ -101,5 +98,18 @@ func (ms *MetadataService) GetMetadataItem(itemPtr metadata_typedefs.IMetadataIt
 	}
 
 	return nil
+}
+
+func (ms *MetadataService) getMetadataServiceSpace(space metadata_typedefs.MetadataSpace) *MetadataServiceSpace {
+	var msa *MetadataServiceSpace
+
+	switch space {
+	case metadata_typedefs.METADATA_SPACE_SHARED: msa = ms.sharedMDServiceSpace
+	case metadata_typedefs.METADATA_SPACE_APP: msa = ms.appMDServiceSpace
+	default:
+		logger.LogWarning("undefined metadata space|space=" + space.String())
+	}
+
+	return msa
 }
 

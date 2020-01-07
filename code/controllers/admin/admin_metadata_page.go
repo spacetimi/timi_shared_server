@@ -2,6 +2,7 @@ package admin
 
 import (
     "github.com/spacetimi/timi_shared_server/code/config"
+    "github.com/spacetimi/timi_shared_server/code/core/services/metadata_service"
     "github.com/spacetimi/timi_shared_server/code/core/services/metadata_service/metadata_typedefs"
     "github.com/spacetimi/timi_shared_server/utils/logger"
     "html/template"
@@ -60,6 +61,7 @@ func showMetadataOverviewPage(httpResponseWriter http.ResponseWriter, request *h
 
     pageObject.MetadataInfo = MetadataInfo{
         Space:space.String(),
+        CurrentVersions: metadata_service.Instance().GetCurrentVersions(space),
     }
 
     templates, err := template.ParseGlob(config.GetTemplateFilesPath() + "/admin_tool/*")
