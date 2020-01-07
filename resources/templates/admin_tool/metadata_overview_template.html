@@ -1,7 +1,56 @@
 {{ template "admin_page_header_template.html" . }}
 
-<div class="container-fluid justify-content-center bg-light border rounded p-2">
-    Metadata Overview
+<div class="jumbotron">
+    <div class="row pt-4">
+
+        <div class="col-md-2"></div>
+
+        <div class="col-md-8">
+
+            <div class="container-fluid bg-dark text-light pt-2 pb-2 border border-info rounded-top">
+                <h5 class="text-uppercase">
+                    {{ .MetadataInfo.Space }} Metadata
+                </h5>
+            </div>
+
+            <div class="container-fluid bg-white justify-content-center pt-2 pb-3 border border-info rounded-bottom">
+                <div class="container">
+
+                    <br/>
+
+                    <div class="row">
+                        <div class="col-md-9 bg-light border border-info rounded">
+                            <span class="badge badge-secondary">Current Versions:</span>
+                            <br/>
+                            <h4>
+                            <span class="badge badge-success">1.0</span>
+                            <span class="badge badge-success">1.1</span>
+                            </h4>
+                        </div>
+
+
+                        <div class="col-md-3 p-2">
+                            <button type="submit" formaction="" class="btn btn-primary btn-lg btn-block">Edit</button>
+                        </div>
+                    </div>
+
+                    <br/>
+
+                    <div class="row bg-light border border-info rounded">
+                        <div class="col-md-12 ">
+                        <h6>Current Versions: </h6>
+                        <h6>1.0, 1.1, 1.2</h6>
+                        <h6>Versions</h6>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-2"></div>
+
+    </div>
 </div>
 
 {{ template "admin_page_footer_template.html" . }}
