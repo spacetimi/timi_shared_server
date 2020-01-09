@@ -6,6 +6,7 @@ import (
 	"github.com/spacetimi/timi_shared_server/code/core"
 	"github.com/spacetimi/timi_shared_server/code/core/services/metadata_service/metadata_typedefs"
 	"github.com/spacetimi/timi_shared_server/utils/logger"
+	"sync"
 )
 
 type MetadataService struct {
@@ -15,17 +16,55 @@ type MetadataService struct {
 
 /* Package init */
 func Initialize() {
-	instance = &MetadataService{}
-	instance.sharedMDServiceSpace = newMetadataServiceSpace(metadata_typedefs.METADATA_SPACE_SHARED)
-	instance.appMDServiceSpace    = newMetadataServiceSpace(metadata_typedefs.METADATA_SPACE_APP)
+    // This is during Initialization. No need to take mutex lock
+	instance = createInstance()
+}
+
+func createInstance() *MetadataService {
+	newInstance := &MetadataService{}
+	newInstance.sharedMDServiceSpace = newMetadataServiceSpace(metadata_typedefs.METADATA_SPACE_SHARED)
+	newInstance.appMDServiceSpace    = newMetadataServiceSpace(metadata_typedefs.METADATA_SPACE_APP)
+
+	return newInstance
 }
 
 var instance *MetadataService
+var mutexForInstance sync.RWMutex
+
 func Instance() *MetadataService {
+    mutexForInstance.RLock()
+	defer mutexForInstance.RUnlock()
+
 	if instance == nil {
 		logger.LogError("Metadata Service instance is null")
 	}
 	return instance
+}
+
+/**
+ * Intended if you want to update the metadata
+ * Only meant to be called from the admin tool / scripts
+ *
+ * This will create a new copy of instance so that any other requests
+ * that are currently working with the oldd copy of instance
+ * will go through using the old copy
+ * Any requests that try to get a copy of instance while it is being modified here will have to wait
+ * till the instance creation is complete
+ */
+func InstanceRW() *MetadataService {
+	mutexForInstance.Lock()
+	logger.LogInfo("Taking write lock on metadata service instance")
+
+	instance = createInstance()
+	return instance
+}
+/**
+ * MUST be called after taking an InstanceRW
+ * Failing to call this will lead to deadlocks
+ */
+func ReleaseInstanceRW() {
+	mutexForInstance.Unlock()
+	logger.LogInfo("Released write lock on metadata service instance")
 }
 
 

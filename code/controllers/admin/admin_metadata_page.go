@@ -127,7 +127,9 @@ func showMetadataOverviewPage(httpResponseWriter http.ResponseWriter, request *h
 
 func updateNewCurrentVersions(space metadata_typedefs.MetadataSpace, newCurrentVersionsCSV string) error {
     newCurrentVersions := strings.Split(strings.Replace(newCurrentVersionsCSV, " ", "", -1), ",")
-    err := metadata_service.Instance().SetCurrentVersions(newCurrentVersions, space)
+
+    defer metadata_service.ReleaseInstanceRW()
+    err := metadata_service.InstanceRW().SetCurrentVersions(newCurrentVersions, space)
     if err != nil {
         logger.LogError("error updating metadata current version" +
                         "|metadata space=" + space.String() +
