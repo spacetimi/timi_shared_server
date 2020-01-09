@@ -31,8 +31,35 @@
 
 
                         <div class="col-md-3 p-2">
-                            <button type="submit" formaction="" class="btn btn-primary btn-lg btn-block">Edit</button>
+                            <button type="button" class="btn btn-primary btn-lg btn-block" data-toggle="modal" data-target="#currentVersionsEditorModal" data-whatever="@mdo">Edit</button>
                         </div>
+
+                        <div class="modal fade" id="currentVersionsEditorModal" tabindex="-1" role="dialog" aria-labelledby="currentVersionsEditorTitle" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-dark text-light">
+                                        <h5 class="modal-title" id="currentVersionsEditorTitle">Edit Current Versions</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true" class="text-light">&times;</span>
+                                        </button>
+                                    </div>
+
+                                    <form method="post">
+                                        <div class="modal-body">
+                                                <div class="form-group">
+                                                    <label for="currentVersionsTextbox" class="col-form-label">Enter current versions (csv):</label>
+                                                    <input type="text" name="currentVersionsCSV" value="{{ .MetadataInfo.CurrentVersionsCSV}}" class="form-control" id="currentVersionsTextbox">
+                                                </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                            <button type="submit" formaction="/admin/metadata/{{ .MetadataInfo.Space }}/setCurrentVersions" class="btn btn-primary">Save</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
 
                     <br/>

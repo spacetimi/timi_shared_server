@@ -26,4 +26,11 @@ type AdminMetadataPageObject struct {
 type MetadataInfo struct {
     Space string
     CurrentVersions []string
+    CurrentVersionsCSV string
+}
+
+type AdminSimpleMessageObject struct {
+    AdminPageObject
+    SimpleMessage string
+    BackLinkHref string
 }

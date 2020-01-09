@@ -7,6 +7,7 @@ import (
     "github.com/spacetimi/timi_shared_server/utils/logger"
     "html/template"
     "net/http"
+    "strings"
 )
 
 func showAdminMetadataPage(httpResponseWriter http.ResponseWriter, request *http.Request, adminPageObject AdminPageObject) {
@@ -29,7 +30,15 @@ func showAdminMetadataPage(httpResponseWriter http.ResponseWriter, request *http
         showMetadataOverviewPage(httpResponseWriter, request, metadataPageObject, metadata_typedefs.METADATA_SPACE_APP)
         return
 
+    case "/admin/metadata/app/setCurrentVersions":
+        showMetadataOverviewPage(httpResponseWriter, request, metadataPageObject, metadata_typedefs.METADATA_SPACE_APP)
+        return
+
     case "/admin/metadata/shared":
+        showMetadataOverviewPage(httpResponseWriter, request, metadataPageObject, metadata_typedefs.METADATA_SPACE_SHARED)
+        return
+
+    case "/admin/metadata/shared/setCurrentVersions":
         showMetadataOverviewPage(httpResponseWriter, request, metadataPageObject, metadata_typedefs.METADATA_SPACE_SHARED)
         return
 
@@ -62,9 +71,49 @@ func showMetadataOverviewPage(httpResponseWriter http.ResponseWriter, request *h
     pageObject.MetadataInfo = MetadataInfo{
         Space:space.String(),
         CurrentVersions: metadata_service.Instance().GetCurrentVersions(space),
+        CurrentVersionsCSV: strings.Join(metadata_service.Instance().GetCurrentVersions(space), ","),
     }
 
     templates, err := template.ParseGlob(config.GetTemplateFilesPath() + "/admin_tool/*")
+
+    // Check post arguments
+    err = request.ParseForm()
+    if err != nil {
+        logger.LogError("error parsing form for metadata request" +
+                        "|request url=" + request.URL.Path +
+                        "|error=" + err.Error())
+        httpResponseWriter.WriteHeader(http.StatusInternalServerError)
+        return
+    }
+
+    newCurrentVersionsCSV := request.Form.Get("currentVersionsCSV")
+    // If new current sdv arguments are sent, try to update and redirect to show success / failure
+    if newCurrentVersionsCSV != "" {
+        err := updateNewCurrentVersions(space, newCurrentVersionsCSV)
+        messageToShow := "Successfully updated current versions."
+        if err != nil {
+            messageToShow = "Something went wrong updating current versions."
+            pageObject.HasError = true
+            pageObject.ErrorString = err.Error()
+        }
+
+        simpleMessagePageObject := AdminSimpleMessageObject{
+            AdminPageObject: pageObject.AdminPageObject,
+            SimpleMessage: messageToShow,
+            BackLinkHref: "/admin/metadata/" + space.String(),
+        }
+
+        err = templates.ExecuteTemplate(httpResponseWriter, "simple_message_template.html", simpleMessagePageObject)
+        if err != nil {
+            logger.LogError("Error executing templates" +
+                            "|request url=" + request.URL.String() +
+                            "|error=" + err.Error())
+            httpResponseWriter.WriteHeader(http.StatusInternalServerError)
+            return
+        }
+        return
+    }
+
     err = templates.ExecuteTemplate(httpResponseWriter, "metadata_overview_template.html", pageObject)
 
     if err != nil {
@@ -72,5 +121,11 @@ func showMetadataOverviewPage(httpResponseWriter http.ResponseWriter, request *h
             "|request url=" + request.URL.String() +
             "|error=" + err.Error())
         httpResponseWriter.WriteHeader(http.StatusInternalServerError)
+        return
     }
 }
+
+func updateNewCurrentVersions(space metadata_typedefs.MetadataSpace, newCurrentVersionsCSV string) error {
+    return nil
+}
+

@@ -18,7 +18,9 @@ var kRoutes = map[string]string {
     "/admin/logout": "logout",
     "/admin/metadata": "metadata",
     "/admin/metadata/app": "metadata",
+    "/admin/metadata/app/setCurrentVersions": "metadata",
     "/admin/metadata/shared": "metadata",
+    "/admin/metadata/shared/setCurrentVersions": "metadata",
 }
 
 func AdminController(httpResponseWriter http.ResponseWriter, request *http.Request) {
