@@ -77,5 +77,23 @@ func (mf *MetadataFetcherFilesystem) GetMetadataManifestForVersion(version strin
 	manifest.Initialize()
 	return &manifest, nil
 }
+
+/**
+ * Only meant to be called from the admin tool / scripts
+ */
+func (mf *MetadataFetcherFilesystem) SetMetadataVersionList(mvl *metadata_typedefs.MetadataVersionList) error {
+    bytes, err := json.Marshal(mvl)
+    if err != nil {
+    	return errors.New("error serializing metadata version list to json|error=" + err.Error())
+	}
+
+	filePath := mf.path + "/" + "MetadataVersionList.json"
+	err = ioutil.WriteFile(filePath, bytes, 0644)
+	if err != nil {
+		return errors.New("error writing metadata version list file|error=" + err.Error())
+	}
+
+    return nil
+}
 /********** End IMetadataFetcher implementation **********/
 

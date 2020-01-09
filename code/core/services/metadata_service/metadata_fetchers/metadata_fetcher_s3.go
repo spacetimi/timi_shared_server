@@ -77,5 +77,13 @@ func (mf *MetadataFetcherS3) GetMetadataManifestForVersion(version string) (*met
     manifest.Initialize()
     return &manifest, nil
 }
+
+/**
+ * Only meant to be called from the admin tool / scripts
+ */
+func (mf *MetadataFetcherS3) SetMetadataVersionList(mvl *metadata_typedefs.MetadataVersionList) error {
+    logger.LogFatal("not implemented exception")
+    return nil
+}
 /********** End IMetadataFetcher implementation **********/
 

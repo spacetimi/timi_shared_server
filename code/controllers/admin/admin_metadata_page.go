@@ -126,6 +126,19 @@ func showMetadataOverviewPage(httpResponseWriter http.ResponseWriter, request *h
 }
 
 func updateNewCurrentVersions(space metadata_typedefs.MetadataSpace, newCurrentVersionsCSV string) error {
+    newCurrentVersions := strings.Split(strings.Replace(newCurrentVersionsCSV, " ", "", -1), ",")
+    err := metadata_service.Instance().SetCurrentVersions(newCurrentVersions, space)
+    if err != nil {
+        logger.LogError("error updating metadata current version" +
+                        "|metadata space=" + space.String() +
+                        "|new current versions=" + newCurrentVersionsCSV +
+                        "|error=" + err.Error())
+        return err
+    }
+
+    logger.LogInfo("Updated current versions for metadata space: " + space.String() +
+                   " to: " + newCurrentVersionsCSV)
+
     return nil
 }
 

@@ -124,3 +124,29 @@ func (msa *MetadataServiceSpace) getMetadataJsonForItem(itemPtr metadata_typedef
     return metadataJson, nil
 }
 
+/**
+ * Only meant to be called from the admin tool / scripts
+ */
+func (msa *MetadataServiceSpace) setCurrentVersions(newCurrentVersions []*core.AppVersion) error {
+    if len(newCurrentVersions) == 0 {
+        return errors.New("current version list cannot be empty")
+    }
+
+    msa.mdVersionList.CurrentVersions = nil
+    for _, version := range newCurrentVersions {
+        if version == nil {
+            return errors.New("version cannot be null")
+        }
+        if !msa.mdVersionList.IsVersionValid(version) {
+            return errors.New("invalid version: " + version.String())
+        }
+        msa.mdVersionList.CurrentVersions = append(msa.mdVersionList.CurrentVersions, version.String())
+    }
+
+    err := msa.mdFetcher.SetMetadataVersionList(msa.mdVersionList)
+    if err != nil {
+        return errors.New("could not save current metadata versions| error=" + err.Error())
+    }
+
+    return nil
+}

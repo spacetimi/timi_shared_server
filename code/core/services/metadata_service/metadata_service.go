@@ -35,13 +35,46 @@ func (ms *MetadataService) GetCurrentVersions(space metadata_typedefs.MetadataSp
     return msa.mdVersionList.CurrentVersions
 }
 
-func (ms *MetadataService) IsMetadataHashUpToDate(key string, hash string, space metadata_typedefs.MetadataSpace, version *core.AppVersion) (bool, error) {
+/**
+ * Only meant to be called from the admin tool / scripts
+ */
+func (ms *MetadataService) SetCurrentVersions(newCurrentVersionStrings []string, space metadata_typedefs.MetadataSpace) error {
+	if len(newCurrentVersionStrings) == 0 {
+		return nil
+	}
+
+	var newCurrentVersions []*core.AppVersion
+	for _, versionString := range newCurrentVersionStrings {
+	    version, err := core.GetAppVersionFromString(versionString)
+	    if err != nil {
+	    	logger.LogError("Error parsing app version" +
+				"|metadata space=" + space.String() +
+	    		"|version string=" + versionString +
+	    		"|error=" + err.Error())
+	    	continue
+		}
+		newCurrentVersions = append(newCurrentVersions, version)
+	}
+
+	if len(newCurrentVersions) == 0 {
+		return errors.New("error parsing versions")
+	}
+
 	msa := ms.getMetadataServiceSpace(space)
 
-	if msa == nil {
-		logger.LogError("unknown metadata space|metadata_space=" + space.String())
-		return false, errors.New("unknown metadata space")
+	err := msa.setCurrentVersions(newCurrentVersions)
+	if err != nil {
+		logger.LogError("error updating current versions" +
+						"|metadata space=" + space.String() +
+						"|error=" + err.Error())
+		return errors.New("couldn't update current versions: " + err.Error())
 	}
+
+    return nil
+}
+
+func (ms *MetadataService) IsMetadataHashUpToDate(key string, hash string, space metadata_typedefs.MetadataSpace, version *core.AppVersion) (bool, error) {
+	msa := ms.getMetadataServiceSpace(space)
 
 	result, err := msa.isMetadataHashUpToDate(key, hash, version)
 	if err != nil {
@@ -63,11 +96,6 @@ func (ms *MetadataService) GetMetadataItem(itemPtr metadata_typedefs.IMetadataIt
 	}
 
 	msa := ms.getMetadataServiceSpace(itemPtr.GetMetadataSpace())
-
-	if msa == nil {
-		logger.LogError("unknown metadata space|metadata_space=" + itemPtr.GetMetadataSpace().String())
-		return errors.New("unknown metadata space")
-	}
 
 	var metadataJson string
 	var err error
@@ -107,7 +135,7 @@ func (ms *MetadataService) getMetadataServiceSpace(space metadata_typedefs.Metad
 	case metadata_typedefs.METADATA_SPACE_SHARED: msa = ms.sharedMDServiceSpace
 	case metadata_typedefs.METADATA_SPACE_APP: msa = ms.appMDServiceSpace
 	default:
-		logger.LogWarning("undefined metadata space|space=" + space.String())
+		logger.LogError("undefined metadata space|space=" + space.String())
 	}
 
 	return msa
