@@ -34,6 +34,14 @@ type EnvironmentConfiguration struct {
 	// MetaData config
 	SharedMetadataSourceURL string
 	AppMetadataSourceURL string
+
+	// Admin tool config
+	AdminToolConfig AdminToolConfiguration
+}
+
+type AdminToolConfiguration struct {
+	SharedMetadataS3BucketName string
+	AppMetadataS3BucketName string
 }
 
 func readEnvironmentConfiguration(pathToConfigFiles string, appEnvString string) *EnvironmentConfiguration {
