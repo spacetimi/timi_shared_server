@@ -28,7 +28,7 @@ func main() {
         os.Exit(1)
     }
     if !scripting_utilities.CheckIfExecutableIsUpToDate(executable_build_time, go_vars_helper.GOPATH + "/src/github.com/spacetimi/timi_shared_server/scripts") {
-    	fmt.Println("One or more packages in timi_shared_server/scripts/ have been updated since this was compiled. Please compile scripts again by going to the timi_shared_server/scripts/ folder and running 'make'")
+    	fmt.Println("One or more packages in timi_shared_server/scripts/ have been updated since this was compiled. Please compile this script again by going to the timi_shared_server/scripts/timi_build/ folder and running 'make'")
         os.Exit(1)
     }
 

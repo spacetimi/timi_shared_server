@@ -1,7 +1,6 @@
-SCRIPTS_ROOT_PATH:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 GOPATH:=$(shell go env GOPATH)
 
-TIMI_BUILD_PATH:=${SCRIPTS_ROOT_PATH}/timi_build/
+TIMI_BUILD_PATH:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
 all: timi_build
 
