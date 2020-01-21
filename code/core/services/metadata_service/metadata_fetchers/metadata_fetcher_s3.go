@@ -4,7 +4,6 @@ import (
     "encoding/json"
     "errors"
     "github.com/aws/aws-sdk-go/aws"
-    "github.com/aws/aws-sdk-go/aws/credentials"
     "github.com/aws/aws-sdk-go/aws/session"
     "github.com/aws/aws-sdk-go/service/s3/s3manager"
     "github.com/spacetimi/timi_shared_server/code/config"
@@ -92,15 +91,19 @@ func (mf *MetadataFetcherS3) GetMetadataManifestForVersion(version string) (*met
  * Only meant to be called from the admin tool / scripts
  */
 func (mf *MetadataFetcherS3) SetMetadataVersionList(mvl *metadata_typedefs.MetadataVersionList) error {
-    awsSession, err := session.NewSession(&aws.Config{
-        Region:      aws.String("us-east-1"),
-        Credentials: credentials.NewSharedCredentials("", "spacetimi_bonda_metadata_admin"),
-    })
-    if err != nil {
-        return errors.New("error creating aws session: " + err.Error())
-    }
+    awsSession := session.Must(session.NewSessionWithOptions(session.Options{
+        SharedConfigState: session.SharedConfigEnable,
+    }))
 
-    _, err = awsSession.Config.Credentials.Get()
+    //awsSession, err := session.NewSession(&aws.Config{
+    //    Region:      aws.String("us-east-1"),
+    //    Credentials: credentials.NewSharedCredentials("", "spacetimi_bonda_metadata_admin"),
+    //})
+    //if err != nil {
+    //    return errors.New("error creating aws session: " + err.Error())
+    //}
+
+    _, err := awsSession.Config.Credentials.Get()
     if err != nil {
         return errors.New("error getting credentials for aws session: " + err.Error())
     }
