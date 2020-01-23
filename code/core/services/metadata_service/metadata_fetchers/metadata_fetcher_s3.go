@@ -3,14 +3,11 @@ package metadata_fetchers
 import (
     "encoding/json"
     "errors"
-    "github.com/aws/aws-sdk-go/aws"
-    "github.com/aws/aws-sdk-go/aws/session"
-    "github.com/aws/aws-sdk-go/service/s3/s3manager"
     "github.com/spacetimi/timi_shared_server/code/config"
     "github.com/spacetimi/timi_shared_server/code/core/services/metadata_service/metadata_typedefs"
+    "github.com/spacetimi/timi_shared_server/utils/aws_helper"
     "github.com/spacetimi/timi_shared_server/utils/file_utils"
     "github.com/spacetimi/timi_shared_server/utils/logger"
-    "strings"
 )
 
 type MetadataFetcherS3 struct { // Implements IMetadataFetcher
@@ -92,13 +89,9 @@ func (mf *MetadataFetcherS3) GetMetadataManifestForVersion(version string) (*met
  */
 func (mf *MetadataFetcherS3) SetMetadataVersionList(mvl *metadata_typedefs.MetadataVersionList) error {
 
-    awsSession := session.Must(session.NewSessionWithOptions(session.Options{
-        SharedConfigState: session.SharedConfigEnable,
-    }))
-
-    _, err := awsSession.Config.Credentials.Get()
+    awsSession, err := aws_helper.GetNewDefaultSession()
     if err != nil {
-        return errors.New("error getting credentials for aws session: " + err.Error())
+        return errors.New("error creating aws session: " + err.Error())
     }
 
     var bytes []byte
@@ -108,23 +101,11 @@ func (mf *MetadataFetcherS3) SetMetadataVersionList(mvl *metadata_typedefs.Metad
     } else {
         bytes, err = json.MarshalIndent(mvl, "", "    ")
     }
-
     if err != nil {
         return errors.New("error serializing metadata version list: " + err.Error())
     }
-    reader := strings.NewReader(string(bytes))
 
-    // TODO: Avi: Do not use public-read (not even on test and staging)
-    publicReadACL := "public-read"
-
-    uploader := s3manager.NewUploader(awsSession)
-    _, err = uploader.Upload(&s3manager.UploadInput{
-        Bucket:aws.String(mf.adminS3BucketName),
-        Key:aws.String("metadata/MetadataVersionList.json"),
-        Body: reader,
-        ACL: &publicReadACL,
-    })
-
+    err = aws_helper.UploadToS3(awsSession, bytes, mf.adminS3BucketName, "metadata/MetadataVersionList.json")
     if err != nil {
         return errors.New("error uploading metadata version list: " + err.Error())
     }
