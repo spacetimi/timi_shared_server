@@ -52,8 +52,8 @@
                                                 </div>
                                         </div>
                                         <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                            <button type="submit" formaction="/admin/metadata/{{ .MetadataInfo.Space }}/setCurrentVersions" class="btn btn-primary">Save</button>
+                                            <button type="button" id="close_button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                            <button type="submit" id="edit_button" formaction="/admin/metadata/{{ .MetadataInfo.Space }}/setCurrentVersions" onclick="showLoadingSpinner()" class="btn btn-primary">Save</button>
                                         </div>
                                     </form>
                                 </div>
@@ -77,8 +77,18 @@
         </div>
 
         <div class="col-md-2"></div>
-
     </div>
 </div>
+
+<script>
+    function showLoadingSpinner() {
+        document.getElementById("edit_button").innerHTML = "\
+                        <button id=\"loading_spinner\" style=\"visibility: visible\" class=\"btn btn-primary\" type=\"button\" disabled>\
+                            <span class=\"spinner-grow spinner-grow-sm\" role=\"status\" aria-hidden=\"true\"></span>\
+                            Saving...\
+                        </button>";
+        document.getElementById("close_button").style.visibility = "hidden";
+    }
+</script>
 
 {{ template "admin_page_footer_template.html" . }}
