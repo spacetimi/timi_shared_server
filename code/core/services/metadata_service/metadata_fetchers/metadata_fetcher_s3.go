@@ -91,17 +91,10 @@ func (mf *MetadataFetcherS3) GetMetadataManifestForVersion(version string) (*met
  * Only meant to be called from the admin tool / scripts
  */
 func (mf *MetadataFetcherS3) SetMetadataVersionList(mvl *metadata_typedefs.MetadataVersionList) error {
+
     awsSession := session.Must(session.NewSessionWithOptions(session.Options{
         SharedConfigState: session.SharedConfigEnable,
     }))
-
-    //awsSession, err := session.NewSession(&aws.Config{
-    //    Region:      aws.String("us-east-1"),
-    //    Credentials: credentials.NewSharedCredentials("", "spacetimi_bonda_metadata_admin"),
-    //})
-    //if err != nil {
-    //    return errors.New("error creating aws session: " + err.Error())
-    //}
 
     _, err := awsSession.Config.Credentials.Get()
     if err != nil {
