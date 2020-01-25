@@ -19,8 +19,18 @@
                     <br/>
 
                     <div class="row">
-                        <div class="col-md-9 bg-light border border-info rounded">
+                        <div class="col-md-9 bg-light border border-info rounded pt-2">
                             <span class="badge badge-secondary">Current Versions:</span>
+
+                            <a class="float-right" data-toggle="collapse" href="#learnMoreCollapsible" role="button" aria-expanded="false" aria-controls="learnMoreCollapsible">
+                                <img src="/images/question_mark.png">
+                            </a>
+                            <div class="collapse" id="learnMoreCollapsible">
+                                <div class="card card-body">
+                                    <small>Versions marked as "Current" are cached in the api-servers for faster access. How many versions can be marked as current depends on the configuration of the api-servers and the size of each version's data set.</small>
+                                </div>
+                            </div>
+
                             <br/>
                             <h4>
                                 {{ range $currentVersion := .MetadataInfo.CurrentVersions }}
