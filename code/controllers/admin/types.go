@@ -27,6 +27,7 @@ type MetadataInfo struct {
     Space string
     CurrentVersions []string
     CurrentVersionsCSV string
+    AllVersions []string
 }
 
 type AdminSimpleMessageObject struct {

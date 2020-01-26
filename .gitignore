@@ -16,3 +16,6 @@
 
 # Game metadata files
 metadata/*
+
+# Mac Finder files
+.DS_Store

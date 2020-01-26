@@ -7,6 +7,7 @@ import (
     "github.com/spacetimi/timi_shared_server/utils/logger"
     "html/template"
     "net/http"
+    "sort"
     "strings"
 )
 
@@ -34,12 +35,20 @@ func showAdminMetadataPage(httpResponseWriter http.ResponseWriter, request *http
         showMetadataOverviewPage(httpResponseWriter, request, metadataPageObject, metadata_typedefs.METADATA_SPACE_APP)
         return
 
+    case "/admin/metadata/app/editVersion":
+        showMetadataEditVersionPage(httpResponseWriter, request, metadataPageObject, metadata_typedefs.METADATA_SPACE_APP)
+        return
+
     case "/admin/metadata/shared":
         showMetadataOverviewPage(httpResponseWriter, request, metadataPageObject, metadata_typedefs.METADATA_SPACE_SHARED)
         return
 
     case "/admin/metadata/shared/setCurrentVersions":
         showMetadataOverviewPage(httpResponseWriter, request, metadataPageObject, metadata_typedefs.METADATA_SPACE_SHARED)
+        return
+
+    case "/admin/metadata/shared/editVersion":
+        showMetadataEditVersionPage(httpResponseWriter, request, metadataPageObject, metadata_typedefs.METADATA_SPACE_SHARED)
         return
 
     default:
@@ -68,10 +77,17 @@ func showMetadataOverviewPage(httpResponseWriter http.ResponseWriter, request *h
                                          Href: "/admin/metadata/" + space.String(),
                                      })
 
+    allVersions := metadata_service.Instance().GetAllVersions(space)
+    allVersionsSorted := make([]string, len(allVersions))
+    copy(allVersionsSorted, allVersions)
+    sort.Strings(allVersionsSorted)
+    sort.Sort(sort.Reverse(sort.StringSlice(allVersionsSorted)))
+
     pageObject.MetadataInfo = MetadataInfo{
         Space:space.String(),
         CurrentVersions: metadata_service.Instance().GetCurrentVersions(space),
         CurrentVersionsCSV: strings.Join(metadata_service.Instance().GetCurrentVersions(space), ","),
+        AllVersions: allVersionsSorted,
     }
 
     templates, err := template.ParseGlob(config.GetTemplateFilesPath() + "/admin_tool/*")
@@ -144,3 +160,22 @@ func updateNewCurrentVersions(space metadata_typedefs.MetadataSpace, newCurrentV
     return nil
 }
 
+func showMetadataEditVersionPage(httpResponseWriter http.ResponseWriter, request *http.Request, pageObject AdminMetadataPageObject, space metadata_typedefs.MetadataSpace) {
+     simpleMessagePageObject := AdminSimpleMessageObject{
+        AdminPageObject: pageObject.AdminPageObject,
+        SimpleMessage: "Editing version",
+        BackLinkHref: "/admin/metadata/" + space.String(),
+    }
+
+    templates, err := template.ParseGlob(config.GetTemplateFilesPath() + "/admin_tool/*")
+    err = templates.ExecuteTemplate(httpResponseWriter, "simple_message_template.html", simpleMessagePageObject)
+    if err != nil {
+        logger.LogError("Error executing templates" +
+                        "|request url=" + request.URL.String() +
+                        "|error=" + err.Error())
+        httpResponseWriter.WriteHeader(http.StatusInternalServerError)
+        return
+    }
+
+    return
+}

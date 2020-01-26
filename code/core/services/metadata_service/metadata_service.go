@@ -74,6 +74,12 @@ func (ms *MetadataService) GetCurrentVersions(space metadata_typedefs.MetadataSp
     return msa.mdVersionList.CurrentVersions
 }
 
+func (ms *MetadataService) GetAllVersions(space metadata_typedefs.MetadataSpace) []string {
+	msa := ms.getMetadataServiceSpace(space)
+
+	return msa.mdVersionList.Versions
+}
+
 /**
  * Only meant to be called from the admin tool / scripts
  */

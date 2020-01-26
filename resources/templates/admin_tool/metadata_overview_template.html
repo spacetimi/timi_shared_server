@@ -75,10 +75,21 @@
                     <br/>
 
                     <div class="row bg-light border border-info rounded">
-                        <div class="col-md-12 ">
-                        <h6>Current Versions: </h6>
-                        <h6>1.0, 1.1, 1.2</h6>
-                        <h6>Versions</h6>
+                        <div class="col-md-12 pt-2">
+                            <span class="badge badge-secondary">All Versions:</span>
+                            <br/>
+                            <br/>
+                            <ul class="list-group">
+                                {{ range $version := .MetadataInfo.AllVersions }}
+                                    <li class="list-group-item">
+                                        {{ $version }}
+                                        <a href="/admin/metadata/{{ $.MetadataInfo.Space }}/editVersion">
+                                            <button type="button" class="btn btn-primary float-right">&nbsp;&nbsp;&nbsp;Edit&nbsp;&nbsp;&nbsp;</button>
+                                        </a>
+                                    </li>
+                                {{ end}}
+                            </ul>
+                            <br/>
                         </div>
                     </div>
 
