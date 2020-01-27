@@ -189,17 +189,36 @@ func showMetadataEditVersionPage(httpResponseWriter http.ResponseWriter, request
 
     version := request.Form.Get("version")
     // If version argument is set, show metadata for that version
-    if version != "" {
-        pageObject.Version = version
-    } else {
+    validVersion, err := metadata_service.Instance().IsVersionValid(version, space)
+    if !validVersion {
         simpleMessagePageObject := AdminSimpleMessageObject{
             AdminPageObject: pageObject.AdminPageObject,
-            SimpleMessage: "Edit version: Invalid version",
+            SimpleMessage: "Invalid version: " + err.Error(),
             BackLinkHref: "/admin/metadata/" + space.String(),
         }
 
         showSimpleMessagePage(httpResponseWriter, request, simpleMessagePageObject)
         return
+    }
+
+    pageObject.Version = version
+
+    metadataItems, err := metadata_service.Instance().GetMetadataItemsInVersion(version, space)
+    if err != nil {
+        simpleMessagePageObject := AdminSimpleMessageObject{
+            AdminPageObject: pageObject.AdminPageObject,
+            SimpleMessage: "Error finding metadata items: " + err.Error(),
+            BackLinkHref: "/admin/metadata/" + space.String(),
+        }
+
+        showSimpleMessagePage(httpResponseWriter, request, simpleMessagePageObject)
+        return
+    }
+    for _, metadataItem := range metadataItems {
+        pageObject.Items = append(pageObject.Items, AdminMetadataItem{
+                                                        Key:metadataItem.MetadataKey,
+                                                        Hash:metadataItem.Hash,
+                                                    })
     }
 
     templates, err := template.ParseGlob(config.GetTemplateFilesPath() + "/admin_tool/*")

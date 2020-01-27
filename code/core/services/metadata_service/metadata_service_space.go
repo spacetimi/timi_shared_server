@@ -73,14 +73,23 @@ func newMetadataServiceSpace(metadataSpace metadata_typedefs.MetadataSpace) *Met
     return msa
 }
 
-func (msa *MetadataServiceSpace) isMetadataHashUpToDate(key string, hash string, version *core.AppVersion) (bool, error) {
+func (msa *MetadataServiceSpace) getMetadataManifestForVersion(version *core.AppVersion) (*metadata_typedefs.MetadataManifest, error) {
     if msa.mdVersionList.IsVersionValid(version) == false {
-        return false, errors.New("invalid version")
+        return nil, errors.New("invalid version")
     }
 
     manifest, ok := msa.mdManifests[version.String()]
     if !ok {
-    	return false, errors.New("could not find manifest")
+        return nil, errors.New("could not find manifest for version")
+    }
+
+    return manifest, nil
+}
+
+func (msa *MetadataServiceSpace) isMetadataHashUpToDate(key string, hash string, version *core.AppVersion) (bool, error) {
+    manifest, err := msa.getMetadataManifestForVersion(version)
+    if err != nil {
+        return false, err
     }
 
     manifestItem := manifest.GetManifestItem(key)

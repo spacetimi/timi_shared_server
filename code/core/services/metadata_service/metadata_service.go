@@ -74,12 +74,6 @@ func (ms *MetadataService) GetCurrentVersions(space metadata_typedefs.MetadataSp
     return msa.mdVersionList.CurrentVersions
 }
 
-func (ms *MetadataService) GetAllVersions(space metadata_typedefs.MetadataSpace) []string {
-	msa := ms.getMetadataServiceSpace(space)
-
-	return msa.mdVersionList.Versions
-}
-
 /**
  * Only meant to be called from the admin tool / scripts
  */
@@ -116,6 +110,47 @@ func (ms *MetadataService) SetCurrentVersions(newCurrentVersionStrings []string,
 	}
 
     return nil
+}
+
+func (ms *MetadataService) GetAllVersions(space metadata_typedefs.MetadataSpace) []string {
+	msa := ms.getMetadataServiceSpace(space)
+
+	return msa.mdVersionList.Versions
+}
+
+func (ms *MetadataService) IsVersionValid(versionString string, space metadata_typedefs.MetadataSpace) (bool, error) {
+	msa := ms.getMetadataServiceSpace(space)
+
+	version, err := core.GetAppVersionFromString(versionString)
+	if err != nil {
+		return false, errors.New("error parsing version string: " + err.Error())
+	}
+	valid := msa.mdVersionList.IsVersionValid(version)
+	if !valid {
+		return false, errors.New("no such version")
+	}
+
+	return true, nil
+}
+
+func (ms *MetadataService) GetMetadataItemsInVersion(versionString string, space metadata_typedefs.MetadataSpace) ([]metadata_typedefs.MetadataManifestItem, error) {
+	msa := ms.getMetadataServiceSpace(space)
+
+	version, err := core.GetAppVersionFromString(versionString)
+	if err != nil {
+		return nil, errors.New("error parsing version string: " + err.Error())
+	}
+	valid := msa.mdVersionList.IsVersionValid(version)
+	if !valid {
+		return nil, errors.New("no such version")
+	}
+
+	manifest, err := msa.getMetadataManifestForVersion(version)
+	if err != nil {
+		return nil, errors.New("error loading manifest: " + err.Error())
+	}
+
+	return manifest.MetadataManifestItems, nil
 }
 
 func (ms *MetadataService) IsMetadataHashUpToDate(key string, hash string, space metadata_typedefs.MetadataSpace, version *core.AppVersion) (bool, error) {

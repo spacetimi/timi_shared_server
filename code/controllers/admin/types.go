@@ -27,6 +27,7 @@ type AdminEditMetadataPageObject struct {
     AdminPageObject
     Space string
     Version string
+    Items []AdminMetadataItem
 }
 
 type MetadataInfo struct {
@@ -34,6 +35,11 @@ type MetadataInfo struct {
     CurrentVersions []string
     CurrentVersionsCSV string
     AllVersions []string
+}
+
+type AdminMetadataItem struct {
+    Key string
+    Hash string
 }
 
 type AdminSimpleMessageObject struct {
