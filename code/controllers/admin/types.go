@@ -23,6 +23,12 @@ type AdminMetadataPageObject struct {
     MetadataInfo
 }
 
+type AdminEditMetadataPageObject struct {
+    AdminPageObject
+    Space string
+    Version string
+}
+
 type MetadataInfo struct {
     Space string
     CurrentVersions []string

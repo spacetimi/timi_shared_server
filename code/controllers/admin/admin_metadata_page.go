@@ -18,37 +18,34 @@ func showAdminMetadataPage(httpResponseWriter http.ResponseWriter, request *http
                                               LinkName: "metadata",
                                               Href: "/admin/metadata",
                                           })
-    metadataPageObject := AdminMetadataPageObject{}
-    metadataPageObject.AdminPageObject = adminPageObject
-
     switch request.URL.Path {
 
     case "/admin/metadata":
-        showMetadataSelectPage(httpResponseWriter, request, metadataPageObject)
+        showMetadataSelectPage(httpResponseWriter, request, adminPageObject)
         return
 
     case "/admin/metadata/app":
-        showMetadataOverviewPage(httpResponseWriter, request, metadataPageObject, metadata_typedefs.METADATA_SPACE_APP)
+        showMetadataOverviewPage(httpResponseWriter, request, adminPageObject, metadata_typedefs.METADATA_SPACE_APP)
         return
 
     case "/admin/metadata/app/setCurrentVersions":
-        showMetadataOverviewPage(httpResponseWriter, request, metadataPageObject, metadata_typedefs.METADATA_SPACE_APP)
+        showMetadataOverviewPage(httpResponseWriter, request, adminPageObject, metadata_typedefs.METADATA_SPACE_APP)
         return
 
     case "/admin/metadata/app/editVersion":
-        showMetadataEditVersionPage(httpResponseWriter, request, metadataPageObject, metadata_typedefs.METADATA_SPACE_APP)
+        showMetadataEditVersionPage(httpResponseWriter, request, adminPageObject, metadata_typedefs.METADATA_SPACE_APP)
         return
 
     case "/admin/metadata/shared":
-        showMetadataOverviewPage(httpResponseWriter, request, metadataPageObject, metadata_typedefs.METADATA_SPACE_SHARED)
+        showMetadataOverviewPage(httpResponseWriter, request, adminPageObject, metadata_typedefs.METADATA_SPACE_SHARED)
         return
 
     case "/admin/metadata/shared/setCurrentVersions":
-        showMetadataOverviewPage(httpResponseWriter, request, metadataPageObject, metadata_typedefs.METADATA_SPACE_SHARED)
+        showMetadataOverviewPage(httpResponseWriter, request, adminPageObject, metadata_typedefs.METADATA_SPACE_SHARED)
         return
 
     case "/admin/metadata/shared/editVersion":
-        showMetadataEditVersionPage(httpResponseWriter, request, metadataPageObject, metadata_typedefs.METADATA_SPACE_SHARED)
+        showMetadataEditVersionPage(httpResponseWriter, request, adminPageObject, metadata_typedefs.METADATA_SPACE_SHARED)
         return
 
     default:
@@ -57,9 +54,9 @@ func showAdminMetadataPage(httpResponseWriter http.ResponseWriter, request *http
 }
 
 
-func showMetadataSelectPage(httpResponseWriter http.ResponseWriter, request *http.Request, pageObject AdminMetadataPageObject) {
+func showMetadataSelectPage(httpResponseWriter http.ResponseWriter, request *http.Request, adminPageObject AdminPageObject) {
     templates, err := template.ParseGlob(config.GetTemplateFilesPath() + "/admin_tool/*")
-    err = templates.ExecuteTemplate(httpResponseWriter, "metadata_select_page_template.html", pageObject)
+    err = templates.ExecuteTemplate(httpResponseWriter, "metadata_select_page_template.html", adminPageObject)
 
     if err != nil {
         logger.LogError("Error executing templates" +
@@ -69,7 +66,10 @@ func showMetadataSelectPage(httpResponseWriter http.ResponseWriter, request *htt
     }
 }
 
-func showMetadataOverviewPage(httpResponseWriter http.ResponseWriter, request *http.Request, pageObject AdminMetadataPageObject, space metadata_typedefs.MetadataSpace) {
+func showMetadataOverviewPage(httpResponseWriter http.ResponseWriter, request *http.Request, adminPageObject AdminPageObject, space metadata_typedefs.MetadataSpace) {
+    pageObject := AdminMetadataPageObject{}
+    pageObject.AdminPageObject = adminPageObject
+
     // Add link for back navigation
     pageObject.NavBackLinks = append(pageObject.NavBackLinks,
                                      NavBackLink{
@@ -90,10 +90,8 @@ func showMetadataOverviewPage(httpResponseWriter http.ResponseWriter, request *h
         AllVersions: allVersionsSorted,
     }
 
-    templates, err := template.ParseGlob(config.GetTemplateFilesPath() + "/admin_tool/*")
-
     // Check post arguments
-    err = request.ParseForm()
+    err := request.ParseForm()
     if err != nil {
         logger.LogError("error parsing form for metadata request" +
                         "|request url=" + request.URL.Path +
@@ -103,7 +101,7 @@ func showMetadataOverviewPage(httpResponseWriter http.ResponseWriter, request *h
     }
 
     newCurrentVersionsCSV := request.Form.Get("currentVersionsCSV")
-    // If new current sdv arguments are sent, try to update and redirect to show success / failure
+    // If new current csv arguments are sent, try to update and redirect to show success / failure
     if newCurrentVersionsCSV != "" {
         err := updateNewCurrentVersions(space, newCurrentVersionsCSV)
         messageToShow := "Successfully updated current versions."
@@ -119,19 +117,20 @@ func showMetadataOverviewPage(httpResponseWriter http.ResponseWriter, request *h
             BackLinkHref: "/admin/metadata/" + space.String(),
         }
 
-        err = templates.ExecuteTemplate(httpResponseWriter, "simple_message_template.html", simpleMessagePageObject)
-        if err != nil {
-            logger.LogError("Error executing templates" +
-                            "|request url=" + request.URL.String() +
-                            "|error=" + err.Error())
-            httpResponseWriter.WriteHeader(http.StatusInternalServerError)
-            return
-        }
+        showSimpleMessagePage(httpResponseWriter, request, simpleMessagePageObject)
+        return
+    }
+
+    templates, err := template.ParseGlob(config.GetTemplateFilesPath() + "/admin_tool/*")
+    if err != nil {
+        logger.LogError("error parsing templates" +
+                        "|request url=" + request.URL.Path +
+                        "|error=" + err.Error())
+        httpResponseWriter.WriteHeader(http.StatusInternalServerError)
         return
     }
 
     err = templates.ExecuteTemplate(httpResponseWriter, "metadata_overview_template.html", pageObject)
-
     if err != nil {
         logger.LogError("Error executing templates" +
             "|request url=" + request.URL.String() +
@@ -160,15 +159,59 @@ func updateNewCurrentVersions(space metadata_typedefs.MetadataSpace, newCurrentV
     return nil
 }
 
-func showMetadataEditVersionPage(httpResponseWriter http.ResponseWriter, request *http.Request, pageObject AdminMetadataPageObject, space metadata_typedefs.MetadataSpace) {
-     simpleMessagePageObject := AdminSimpleMessageObject{
-        AdminPageObject: pageObject.AdminPageObject,
-        SimpleMessage: "Editing version",
-        BackLinkHref: "/admin/metadata/" + space.String(),
+func showMetadataEditVersionPage(httpResponseWriter http.ResponseWriter, request *http.Request, adminPageObject AdminPageObject, space metadata_typedefs.MetadataSpace) {
+    pageObject := AdminEditMetadataPageObject{}
+    pageObject.AdminPageObject = adminPageObject
+
+    // Add links for back navigation
+    pageObject.NavBackLinks = append(pageObject.NavBackLinks,
+                                     NavBackLink{
+                                         LinkName: space.String(),
+                                         Href: "/admin/metadata/" + space.String(),
+                                     })
+    pageObject.NavBackLinks = append(pageObject.NavBackLinks,
+                                     NavBackLink{
+                                         LinkName: "editVersion",
+                                         Href: "/admin/metadata/" + space.String() + "/editVersion",
+                                     })
+
+    pageObject.Space = space.String()
+
+    // Check post arguments
+    err := request.ParseForm()
+    if err != nil {
+        logger.LogError("error parsing form for metadata request" +
+                        "|request url=" + request.URL.Path +
+                        "|error=" + err.Error())
+        httpResponseWriter.WriteHeader(http.StatusInternalServerError)
+        return
+    }
+
+    version := request.Form.Get("version")
+    // If version argument is set, show metadata for that version
+    if version != "" {
+        pageObject.Version = version
+    } else {
+        simpleMessagePageObject := AdminSimpleMessageObject{
+            AdminPageObject: pageObject.AdminPageObject,
+            SimpleMessage: "Edit version: Invalid version",
+            BackLinkHref: "/admin/metadata/" + space.String(),
+        }
+
+        showSimpleMessagePage(httpResponseWriter, request, simpleMessagePageObject)
+        return
     }
 
     templates, err := template.ParseGlob(config.GetTemplateFilesPath() + "/admin_tool/*")
-    err = templates.ExecuteTemplate(httpResponseWriter, "simple_message_template.html", simpleMessagePageObject)
+    if err != nil {
+        logger.LogError("error parsing templates" +
+                        "|request url=" + request.URL.Path +
+                        "|error=" + err.Error())
+        httpResponseWriter.WriteHeader(http.StatusInternalServerError)
+        return
+    }
+
+    err = templates.ExecuteTemplate(httpResponseWriter, "metadata_edit_version_template.html", pageObject)
     if err != nil {
         logger.LogError("Error executing templates" +
                         "|request url=" + request.URL.String() +
@@ -179,3 +222,4 @@ func showMetadataEditVersionPage(httpResponseWriter http.ResponseWriter, request
 
     return
 }
+
