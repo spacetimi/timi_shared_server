@@ -14,7 +14,6 @@ type MetadataService struct {
 	appMDServiceSpace    *MetadataServiceSpace
 }
 
-/* Package init */
 func Initialize() {
     // This is during Initialization. No need to take mutex lock
 	instance = createInstance()

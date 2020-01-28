@@ -54,23 +54,5 @@ func processLoginRequest(request *http.Request) LoginResponse {
 		logger.LogInfo("metadata not up to date")
 	}
 
-	mt := MetadataTest{}
-
-	err = metadata_service.Instance().GetMetadataItem(&mt, loginRequest.AppVersion)
-	if err != nil {
-		logger.LogError("Error: " + err.Error())
-	}
-	logger.LogInfo("metadata id: %d", mt.Id)
-
 	return LoginResponse{Success:true, ErrorMessage:"", Body:"Successfully logged in to App: " + config.GetAppName()}
-}
-
-type MetadataTest struct {
-	Id int
-}
-func (m *MetadataTest) GetKey() string {
-	return "MetadataTest"
-}
-func (m *MetadataTest) GetMetadataSpace() metadata_typedefs.MetadataSpace {
-	return metadata_typedefs.METADATA_SPACE_APP
 }

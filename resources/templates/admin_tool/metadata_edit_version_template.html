@@ -21,12 +21,25 @@
                             <br/>
                             {{ range $metadataItem := .Items }}
                                 <li class="list-group-item">
-                                    <form method="post">
-                                        <h5 class="text-primary">
-                                            {{ $metadataItem.Key }}
-                                        </h5>
-                                        <small>Hash: {{ $metadataItem.Hash }}</small>
-                                    </form>
+                                    <div class="row">
+
+                                        <div class="col-md-8">
+                                            <h5 class="text-primary">
+                                                {{ $metadataItem.Key }}
+                                            </h5>
+                                            <small>Hash: {{ $metadataItem.Hash }}</small>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="container-fluid">
+                                                <a class="btn btn-primary" href="/admin/metadata/{{ $.Space }}/download/{{ $.Version }}/{{ $metadataItem.Key }}" target="_blank">Download</a>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="container-fluid">
+                                                <a class="btn btn-primary" href="/admin/metadata/{{ $.Space }}">Upload...</a>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </li>
                             {{ end}}
                         </div>
