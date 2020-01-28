@@ -6,23 +6,40 @@ import (
     "github.com/spacetimi/timi_shared_server/utils/logger"
     "html/template"
     "net/http"
+    "regexp"
     "time"
 )
 
 const kCookieName = "jwtTokenForAdminUser"
 
+const kAdminRouteName_Home = "HOME"
+const kAdminRouteName_Login = "LOGIN"
+const kAdminRouteName_Logout = "LOGOUT"
+const kAdminRouteName_Metadata = "METADATA"
+
 var kRoutes = map[string]string {
-    "/admin": "home",
-    "/admin/": "home/",
-    "/admin/login": "login",
-    "/admin/logout": "logout",
-    "/admin/metadata": "metadata",
-    "/admin/metadata/app": "metadata",
-    "/admin/metadata/app/setCurrentVersions": "metadata",
-    "/admin/metadata/app/editVersion": "metadata",
-    "/admin/metadata/shared": "metadata",
-    "/admin/metadata/shared/setCurrentVersions": "metadata",
-    "/admin/metadata/shared/editVersion": "metadata",
+    "/admin$": kAdminRouteName_Home,
+    "/admin/$": kAdminRouteName_Home,
+    "/admin/login$": kAdminRouteName_Login,
+    "/admin/logout$": kAdminRouteName_Logout,
+    "/admin/metadata.*": kAdminRouteName_Metadata,
+}
+
+var kRouteRegexToRouteName map[*regexp.Regexp]string
+
+/** Package init **/
+func init() {
+    kRouteRegexToRouteName = make(map[*regexp.Regexp]string, len(kRoutes))
+    for route, routeName := range kRoutes {
+        reg, err := regexp.Compile(route)
+        if err != nil {
+            logger.LogError("bad route regex in admin controller" +
+                            "|regex=" + route +
+                            "|error=" + err.Error())
+            continue
+        }
+        kRouteRegexToRouteName[reg] = routeName
+    }
 }
 
 func AdminController(httpResponseWriter http.ResponseWriter, request *http.Request) {
@@ -43,16 +60,11 @@ func AdminController(httpResponseWriter http.ResponseWriter, request *http.Reque
     default: adminPageObject.AppEnvironment = "Unknown"
     }
 
-    matchingRoute, ok := kRoutes[request.URL.Path]
-    if !ok {
-        logger.LogWarning("unknown route request|request url=" + request.URL.Path)
-        httpResponseWriter.WriteHeader(http.StatusNotFound)
-        return
-    }
+    matchingRoute := getRouteNameForRequest(kRouteRegexToRouteName, request.URL.Path)
 
     // If request is for logout, clear cookies and redirect to login page
 
-    if matchingRoute == "logout" {
+    if matchingRoute == kAdminRouteName_Logout {
         cookie := http.Cookie{Name: kCookieName, Value: "", Expires: time.Now()}
         http.SetCookie(httpResponseWriter, &cookie)
         http.Redirect(httpResponseWriter, request, "/admin/login", http.StatusSeeOther)
@@ -61,7 +73,7 @@ func AdminController(httpResponseWriter http.ResponseWriter, request *http.Reque
 
     // If request is for the login page, just show that
 
-    if matchingRoute == "login" {
+    if matchingRoute == kAdminRouteName_Login {
         showLoginPage(httpResponseWriter, request, adminPageObject)
         return
     }
@@ -89,14 +101,12 @@ func AdminController(httpResponseWriter http.ResponseWriter, request *http.Reque
 
     switch matchingRoute {
 
-    case "home": showAdminPage(httpResponseWriter, request, adminPageObject)
-    case "home/": showAdminPage(httpResponseWriter, request, adminPageObject)
-
-    case "metadata": showAdminMetadataPage(httpResponseWriter, request, adminPageObject)
+    case kAdminRouteName_Home: showAdminPage(httpResponseWriter, request, adminPageObject)
+    case kAdminRouteName_Metadata: showAdminMetadataPage(httpResponseWriter, request, adminPageObject)
 
     default:
         logger.LogWarning("unknown route request for admin controller" +
-            "|request URL=" + request.URL.Path)
+                          "|request URL=" + request.URL.Path)
         httpResponseWriter.WriteHeader(http.StatusNotFound)
     }
 }
@@ -174,3 +184,13 @@ func showLoginPage(httpResponseWriter http.ResponseWriter, request *http.Request
         httpResponseWriter.WriteHeader(http.StatusInternalServerError)
     }
 }
+
+func getRouteNameForRequest(routes map[*regexp.Regexp]string, requestUrl string) string {
+    for routeRegexp, routeName := range routes {
+        if routeRegexp.MatchString(requestUrl) {
+            return routeName
+        }
+    }
+    return ""
+}
+
