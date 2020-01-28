@@ -3,6 +3,7 @@ package admin
 import (
     "bytes"
     "encoding/json"
+    "fmt"
     "github.com/spacetimi/timi_shared_server/code/config"
     "github.com/spacetimi/timi_shared_server/code/core"
     "github.com/spacetimi/timi_shared_server/code/core/services/metadata_service"
@@ -23,6 +24,8 @@ const kMetadataRoute_AppOverview = "METADATA_APP_OVERVIEW"
 const kMetadataRoute_SharedOverview = "METADATA_SHARED_OVERVIEW"
 const kMetadataRoute_AppEditVersion = "METADATA_APP_EDIT_VERSION"
 const kMetadataRoute_SharedEditVersion = "METADATA__SHARED_EDIT_VERSION"
+const kMetadataRoute_AppViewMetadata = "METADATA_APP_VIEW_METADATA"
+const kMetadataRoute_SharedViewMetadata = "METADATA_SHARED_VIEW_METADATA"
 const kMetadataRoute_AppDownload = "METADATA_APP_DOWNLOAD"
 const kMetadataRoute_SharedDownload = "METADATA_SHARED_DOWNLOAD"
 
@@ -31,10 +34,12 @@ var kAdminMetadataRoutes = map[string]string{
     "/admin/metadata/app$": kMetadataRoute_AppOverview,
     "/admin/metadata/app/setCurrentVersions$": kMetadataRoute_AppOverview,
     "/admin/metadata/app/editVersion/[0-9]+\\.[0-9]+$": kMetadataRoute_AppEditVersion,
+    "/admin/metadata/app/view/[0-9]+\\.[0-9]+/.*$": kMetadataRoute_AppViewMetadata,
     "/admin/metadata/app/download/[0-9]+\\.[0-9]+/.*$": kMetadataRoute_AppDownload,
     "/admin/metadata/shared$": kMetadataRoute_SharedOverview,
     "/admin/metadata/shared/setCurrentVersions$": kMetadataRoute_SharedOverview,
     "/admin/metadata/shared/editVersion/[0-9]+\\.[0-9]+$": kMetadataRoute_SharedEditVersion,
+    "/admin/metadata/shared/view/[0-9]+\\.[0-9]+/.*$": kMetadataRoute_SharedViewMetadata,
     "/admin/metadata/shared/download/[0-9]+\\.[0-9]+/.*$": kMetadataRoute_SharedDownload,
 }
 
@@ -79,8 +84,12 @@ func showAdminMetadataPage(httpResponseWriter http.ResponseWriter, request *http
         showMetadataEditVersionPage(httpResponseWriter, request, adminPageObject, metadata_typedefs.METADATA_SPACE_APP)
         return
 
+    case kMetadataRoute_AppViewMetadata:
+        showMetadataViewOrDownloadPage(httpResponseWriter, request, adminPageObject, metadata_typedefs.METADATA_SPACE_APP, true)
+        return
+
     case kMetadataRoute_AppDownload:
-        showMetadataDownloadPage(httpResponseWriter, request, adminPageObject, metadata_typedefs.METADATA_SPACE_APP)
+        showMetadataViewOrDownloadPage(httpResponseWriter, request, adminPageObject, metadata_typedefs.METADATA_SPACE_APP, false)
         return
 
     case kMetadataRoute_SharedOverview:
@@ -91,8 +100,12 @@ func showAdminMetadataPage(httpResponseWriter http.ResponseWriter, request *http
         showMetadataEditVersionPage(httpResponseWriter, request, adminPageObject, metadata_typedefs.METADATA_SPACE_SHARED)
         return
 
+    case kMetadataRoute_SharedViewMetadata:
+        showMetadataViewOrDownloadPage(httpResponseWriter, request, adminPageObject, metadata_typedefs.METADATA_SPACE_SHARED, true)
+        return
+
     case kMetadataRoute_SharedDownload:
-        showMetadataDownloadPage(httpResponseWriter, request, adminPageObject, metadata_typedefs.METADATA_SPACE_SHARED)
+        showMetadataViewOrDownloadPage(httpResponseWriter, request, adminPageObject, metadata_typedefs.METADATA_SPACE_SHARED, false)
         return
 
     default:
@@ -289,7 +302,7 @@ func showMetadataEditVersionPage(httpResponseWriter http.ResponseWriter, request
     return
 }
 
-func showMetadataDownloadPage(httpResponseWriter http.ResponseWriter, request *http.Request, adminPageObject AdminPageObject, space metadata_typedefs.MetadataSpace) {
+func showMetadataViewOrDownloadPage(httpResponseWriter http.ResponseWriter, request *http.Request, adminPageObject AdminPageObject, space metadata_typedefs.MetadataSpace, viewOnly bool) {
 
     // Parse url for editing version and metadata item key
     tokens := strings.Split(request.URL.Path, "/")
@@ -369,8 +382,20 @@ func showMetadataDownloadPage(httpResponseWriter http.ResponseWriter, request *h
         return
     }
 
-    // Mark teh returned content as downloadable to the browser
-    httpResponseWriter.Header().Add("Content-Disposition", "Attachment")
+    if viewOnly {
+        // Just write out the serialized metadata item
+        _, err := fmt.Fprintln(httpResponseWriter, string(content))
+        if err != nil {
+            logger.LogError("error writing metadata json" +
+                "|metadata item key=" + metadataItemKey +
+                "|error=" + err.Error())
+            httpResponseWriter.WriteHeader(http.StatusInternalServerError)
+        }
 
-    http.ServeContent(httpResponseWriter, request, metadataItemKey + ".json", time.Now(), bytes.NewReader([]byte(content)))
+    } else {
+        // Mark the returned content as downloadable to the browser
+        httpResponseWriter.Header().Add("Content-Disposition", "Attachment")
+
+        http.ServeContent(httpResponseWriter, request, metadataItemKey + ".json", time.Now(), bytes.NewReader([]byte(content)))
+    }
 }

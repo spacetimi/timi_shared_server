@@ -23,20 +23,27 @@
                                 <li class="list-group-item">
                                     <div class="row">
 
-                                        <div class="col-md-8">
+                                        <div class="col-md-7">
                                             <h5 class="text-primary">
                                                 {{ $metadataItem.Key }}
                                             </h5>
                                             <small>Hash: {{ $metadataItem.Hash }}</small>
                                         </div>
-                                        <div class="col-md-2">
-                                            <div class="container-fluid">
-                                                <a class="btn btn-primary" href="/admin/metadata/{{ $.Space }}/download/{{ $.Version }}/{{ $metadataItem.Key }}" target="_blank">Download</a>
+                                        <div class="col-md-3">
+                                            <div class="btn-group" role="group" aria-label="View Download Buttons">
+                                                <a href="/admin/metadata/{{ $.Space }}/view/{{ $.Version }}/{{ $metadataItem.Key }}" target="_blank" type="button" class="btn btn-info border border-dark rounded-left">
+                                                    View&nbsp;
+                                                    <img src="/images/open_in_new_tab.png"></a>
+                                                </a>
+                                                <a href="/admin/metadata/{{ $.Space }}/download/{{ $.Version }}/{{ $metadataItem.Key }}" target="_blank" type="button" class="btn btn-warning border border-dark rounded-right">
+                                                    Download&nbsp;
+                                                    <img src="/images/download_icon.png"></a>
+                                                </a>
                                             </div>
                                         </div>
                                         <div class="col-md-2">
                                             <div class="container-fluid">
-                                                <a class="btn btn-primary" href="/admin/metadata/{{ $.Space }}">Upload...</a>
+                                                <a class="btn btn-danger border border-dark rounded" href="/admin/metadata/{{ $.Space }}">&nbsp;&nbsp;Upload&nbsp;...&nbsp;&nbsp;</a>
                                             </div>
                                         </div>
                                     </div>
