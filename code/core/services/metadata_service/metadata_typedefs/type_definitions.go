@@ -29,6 +29,8 @@ type IMetadataFetcher interface {
      * Only meant to be called from the admin tool / scripts
      */
 	SetMetadataVersionList(mvl *MetadataVersionList) error
+	SetMetadataJsonByKey(key string, metadataJson string, version string) error
+	SetMetadataManifestForVersion(manifest *MetadataManifest, version string) error
 }
 
 // Error strings

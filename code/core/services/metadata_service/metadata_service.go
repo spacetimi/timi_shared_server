@@ -132,7 +132,7 @@ func (ms *MetadataService) IsVersionValid(versionString string, space metadata_t
 	return true, nil
 }
 
-func (ms *MetadataService) GetMetadataItemsInVersion(versionString string, space metadata_typedefs.MetadataSpace) ([]metadata_typedefs.MetadataManifestItem, error) {
+func (ms *MetadataService) GetMetadataItemsInVersion(versionString string, space metadata_typedefs.MetadataSpace) ([]*metadata_typedefs.MetadataManifestItem, error) {
 	msa := ms.getMetadataServiceSpace(space)
 
 	version, err := core.GetAppVersionFromString(versionString)
@@ -202,6 +202,26 @@ func (ms *MetadataService) GetMetadataItem(itemPtr metadata_typedefs.IMetadataIt
 						"|version=" + version.String() +
 			            "|error=" + err.Error())
 		return errors.New("failed deserializing metadata")
+	}
+
+	return nil
+}
+
+/**
+ * Only meant to be called from the admin tool / scripts
+ */
+func (ms *MetadataService) SetMetadataItem(itemPtr metadata_typedefs.IMetadataItem, version *core.AppVersion) error {
+	if itemPtr == nil {
+		logger.LogError("itemPtr is null")
+		return errors.New("itemPtr is null")
+	}
+
+	msa := ms.getMetadataServiceSpace(itemPtr.GetMetadataSpace())
+	err := msa.setMetadataJsonForItem(itemPtr, version)
+
+	if err != nil {
+		logger.LogError("error saving metadata item|error=" + err.Error())
+		return errors.New("error saving metadata item: " + err.Error())
 	}
 
 	return nil

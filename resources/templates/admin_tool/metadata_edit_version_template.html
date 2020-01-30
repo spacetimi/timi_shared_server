@@ -43,9 +43,39 @@
                                         </div>
                                         <div class="col-md-2">
                                             <div class="container-fluid">
-                                                <a class="btn btn-danger border border-dark rounded" href="/admin/metadata/{{ $.Space }}">&nbsp;&nbsp;Upload&nbsp;...&nbsp;&nbsp;</a>
+                                                <button type="button" class="btn btn-danger border border-dark rounded" data-toggle="modal" data-target="#uploadNewModal{{ $metadataItem.Key }}" data-whatever="@mdo">&nbsp;&nbsp;Upload&nbsp;...&nbsp;&nbsp;</button>
                                             </div>
                                         </div>
+
+                                        <div class="modal fade" id="uploadNewModal{{ $metadataItem.Key }}" tabindex="-1" role="dialog" aria-labelledby="uploadNewEditorTitle" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered" role="document">
+                                                <div class="modal-content">
+                                                    <div class="modal-header bg-dark text-light">
+                                                        <h5 class="modal-title" id="uploadNewEditorTitle">Upload new content for: {{ $metadataItem.Key }}</h5>
+                                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                            <span aria-hidden="true" class="text-light">&times;</span>
+                                                        </button>
+                                                    </div>
+
+                                                    <form method="post" enctype="multipart/form-data">
+                                                        <div class="modal-body">
+                                                            <div class="form-group">
+                                                                <label for="currentVersionsTextbox" class="col-form-label">Select new file:</label>
+                                                                <br/>
+                                                                <input type="file" id="{{ $metadataItem.Key }}" name="{{ $metadataItem.Key }}" accept=".json">
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" id="close_button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                                            <button type="submit" id="edit_button" formaction="/admin/metadata/{{ $.Space }}/upload/{{ $.Version }}/{{ $metadataItem.Key }}" onclick="showLoadingSpinner()" class="btn btn-primary">Upload</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+
+
+
                                     </div>
                                 </li>
                             {{ end}}
@@ -62,5 +92,17 @@
     </div>
 
 </div>
+
+
+<script>
+    function showLoadingSpinner() {
+        document.getElementById("edit_button").innerHTML = "\
+                        <button id=\"loading_spinner\" style=\"visibility: visible\" class=\"btn btn-primary\" type=\"button\" disabled>\
+                            <span class=\"spinner-grow spinner-grow-sm\" role=\"status\" aria-hidden=\"true\"></span>\
+                            Saving...\
+                        </button>";
+        document.getElementById("close_button").style.visibility = "hidden";
+    }
+</script>
 
 {{ template "admin_page_footer_template.html" . }}

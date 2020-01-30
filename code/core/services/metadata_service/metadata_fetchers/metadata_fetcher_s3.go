@@ -36,6 +36,14 @@ func (mf *MetadataFetcherS3) GetMetadataJsonByKey(key string, version string) (s
     return fileContents, nil
 }
 
+/**
+ * Only meant to be called from the admin tool / scripts
+ */
+func (mf *MetadataFetcherS3) SetMetadataJsonByKey(key string, metadataJson string, version string) error {
+    logger.LogFatal("not implemented exception")
+    return nil
+}
+
 func (mf *MetadataFetcherS3) GetMetadataVersionList() (*metadata_typedefs.MetadataVersionList, error) {
     mvl := metadata_typedefs.MetadataVersionList{}
 
@@ -82,6 +90,14 @@ func (mf *MetadataFetcherS3) GetMetadataManifestForVersion(version string) (*met
 
     manifest.Initialize()
     return &manifest, nil
+}
+
+/**
+ * Only meant to be called from the admin tool / scripts
+ */
+func (mf *MetadataFetcherS3) SetMetadataManifestForVersion(manifest *metadata_typedefs.MetadataManifest, version string) error {
+    logger.LogFatal("not implemented exception")
+    return nil
 }
 
 /**

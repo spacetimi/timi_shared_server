@@ -11,6 +11,7 @@ import (
     "github.com/spacetimi/timi_shared_server/code/core/services/metadata_service/metadata_typedefs"
     "github.com/spacetimi/timi_shared_server/utils/logger"
     "html/template"
+    "io"
     "net/http"
     "path/filepath"
     "regexp"
@@ -28,6 +29,8 @@ const kMetadataRoute_AppViewMetadata = "METADATA_APP_VIEW_METADATA"
 const kMetadataRoute_SharedViewMetadata = "METADATA_SHARED_VIEW_METADATA"
 const kMetadataRoute_AppDownload = "METADATA_APP_DOWNLOAD"
 const kMetadataRoute_SharedDownload = "METADATA_SHARED_DOWNLOAD"
+const kMetadataRoute_AppUpload = "METADATA_APP_UPLOAD"
+const kMetadataRoute_SharedUpload = "METADATA_SHARED_UPLOAD"
 
 var kAdminMetadataRoutes = map[string]string{
     "/admin/metadata$": kMetadataRoute_SelectSpace,
@@ -36,11 +39,13 @@ var kAdminMetadataRoutes = map[string]string{
     "/admin/metadata/app/editVersion/[0-9]+\\.[0-9]+$": kMetadataRoute_AppEditVersion,
     "/admin/metadata/app/view/[0-9]+\\.[0-9]+/.*$": kMetadataRoute_AppViewMetadata,
     "/admin/metadata/app/download/[0-9]+\\.[0-9]+/.*$": kMetadataRoute_AppDownload,
+    "/admin/metadata/app/upload/[0-9]+\\.[0-9]+/.*$": kMetadataRoute_AppUpload,
     "/admin/metadata/shared$": kMetadataRoute_SharedOverview,
     "/admin/metadata/shared/setCurrentVersions$": kMetadataRoute_SharedOverview,
     "/admin/metadata/shared/editVersion/[0-9]+\\.[0-9]+$": kMetadataRoute_SharedEditVersion,
     "/admin/metadata/shared/view/[0-9]+\\.[0-9]+/.*$": kMetadataRoute_SharedViewMetadata,
     "/admin/metadata/shared/download/[0-9]+\\.[0-9]+/.*$": kMetadataRoute_SharedDownload,
+    "/admin/metadata/shared/upload/[0-9]+\\.[0-9]+/.*$": kMetadataRoute_SharedUpload,
 }
 
 var kAdminMetadataRouteRegexToRouteName map[*regexp.Regexp]string
@@ -92,6 +97,10 @@ func showAdminMetadataPage(httpResponseWriter http.ResponseWriter, request *http
         showMetadataViewOrDownloadPage(httpResponseWriter, request, adminPageObject, metadata_typedefs.METADATA_SPACE_APP, false)
         return
 
+    case kMetadataRoute_AppUpload:
+        showMetadataUploadPage(httpResponseWriter, request, adminPageObject, metadata_typedefs.METADATA_SPACE_APP)
+        return
+
     case kMetadataRoute_SharedOverview:
         showMetadataOverviewPage(httpResponseWriter, request, adminPageObject, metadata_typedefs.METADATA_SPACE_SHARED)
         return
@@ -106,6 +115,10 @@ func showAdminMetadataPage(httpResponseWriter http.ResponseWriter, request *http
 
     case kMetadataRoute_SharedDownload:
         showMetadataViewOrDownloadPage(httpResponseWriter, request, adminPageObject, metadata_typedefs.METADATA_SPACE_SHARED, false)
+        return
+
+    case kMetadataRoute_SharedUpload:
+        showMetadataUploadPage(httpResponseWriter, request, adminPageObject, metadata_typedefs.METADATA_SPACE_SHARED)
         return
 
     default:
@@ -398,4 +411,129 @@ func showMetadataViewOrDownloadPage(httpResponseWriter http.ResponseWriter, requ
 
         http.ServeContent(httpResponseWriter, request, metadataItemKey + ".json", time.Now(), bytes.NewReader([]byte(content)))
     }
+}
+
+func showMetadataUploadPage(httpResponseWriter http.ResponseWriter, request *http.Request, adminPageObject AdminPageObject, space metadata_typedefs.MetadataSpace) {
+
+    // Parse url for editing version and metadata item key
+    tokens := strings.Split(request.URL.Path, "/")
+    if len(tokens) < 2 {
+        logger.LogError("malformed request url in metadata download request" +
+                        "|request url=" + request.URL.Path)
+        httpResponseWriter.WriteHeader(http.StatusNotFound)
+        return
+    }
+    metadataItemKey := tokens[len(tokens) - 1]
+    versionString := tokens[len(tokens) - 2]
+
+    version, err := core.GetAppVersionFromString(versionString)
+    if err != nil {
+        logger.LogError("error parsing editing version from url" +
+                        "|request url=" + request.URL.Path +
+                        "|error=" + err.Error())
+        httpResponseWriter.WriteHeader(http.StatusNotFound)
+        return
+    }
+
+    validVersion, err := metadata_service.Instance().IsVersionValid(version.String(), space)
+    if !validVersion {
+        simpleMessagePageObject := AdminSimpleMessageObject{
+            AdminPageObject: adminPageObject,
+            SimpleMessage: "Invalid version: " + err.Error(),
+            BackLinkHref: "/admin/metadata/" + space.String() + "/editVersion/" + version.String(),
+        }
+
+        showSimpleMessagePage(httpResponseWriter, request, simpleMessagePageObject)
+        return
+    }
+
+
+    err = request.ParseMultipartForm(32 << 20) // limit your max input length!
+    if err != nil {
+        logger.LogError("error parsing request for uploading metadata item" +
+                        "|metadata item key=" + metadataItemKey +
+                        "|error=" + err.Error())
+        httpResponseWriter.WriteHeader(http.StatusInternalServerError)
+        return
+    }
+
+    var buffer bytes.Buffer
+    uploadedFile, _, err := request.FormFile(metadataItemKey)
+    if err != nil {
+        logger.LogError("error getting file from request for uploading metadata item" +
+                        "|metadata item key=" + metadataItemKey +
+                        "|error=" + err.Error())
+        httpResponseWriter.WriteHeader(http.StatusInternalServerError)
+        return
+    }
+    defer func() {
+        err = uploadedFile.Close()
+    }()
+
+    _, err = io.Copy(&buffer, uploadedFile)
+    if err != nil {
+        logger.LogError("error copying file contents from request for uploading metadata item" +
+                        "|metadata item key=" + metadataItemKey +
+                        "|error=" + err.Error())
+        httpResponseWriter.WriteHeader(http.StatusInternalServerError)
+        return
+    }
+
+    fileContents := buffer.String()
+
+    metadataItem, err := metadata_factory.InstantiateMetadataItem(metadataItemKey)
+    if err != nil {
+        logger.LogError("error instantiating metadata item while processing request for uploading metadata item" +
+                        "|metadata item key=" + metadataItemKey +
+                        "|error=" + err.Error())
+        httpResponseWriter.WriteHeader(http.StatusInternalServerError)
+        return
+    }
+    if space != metadataItem.GetMetadataSpace() {
+        simpleMessagePageObject := AdminSimpleMessageObject{
+            AdminPageObject: adminPageObject,
+            SimpleMessage: "Wrong metadata space for " + metadataItemKey +
+                           ". Expected=" + metadataItem.GetMetadataSpace().String() +
+                           ". Got=" + space.String() + err.Error(),
+            BackLinkHref: "/admin/metadata/" + space.String() + "/editVersion/" + version.String(),
+        }
+
+        showSimpleMessagePage(httpResponseWriter, request, simpleMessagePageObject)
+        return
+    }
+
+    err = json.Unmarshal([]byte(fileContents), metadataItem)
+    if err != nil {
+        simpleMessagePageObject := AdminSimpleMessageObject{
+            AdminPageObject: adminPageObject,
+            SimpleMessage: "Error deserializing " + metadataItemKey +
+                           ". Error=" + err.Error(),
+            BackLinkHref: "/admin/metadata/" + space.String() + "/editVersion/" + version.String(),
+        }
+
+        showSimpleMessagePage(httpResponseWriter, request, simpleMessagePageObject)
+        return
+    }
+
+    err = metadata_service.Instance().SetMetadataItem(metadataItem, version)
+    if err != nil {
+        simpleMessagePageObject := AdminSimpleMessageObject{
+            AdminPageObject: adminPageObject,
+            SimpleMessage: "Error saving " + metadataItemKey +
+                           ". Error=" + err.Error(),
+            BackLinkHref: "/admin/metadata/" + space.String() + "/editVersion/" + version.String(),
+        }
+
+        showSimpleMessagePage(httpResponseWriter, request, simpleMessagePageObject)
+        return
+    }
+
+    simpleMessagePageObject := AdminSimpleMessageObject{
+        AdminPageObject: adminPageObject,
+        SimpleMessage: "Successfully saved metadata for " + metadataItemKey,
+        BackLinkHref: "/admin/metadata/" + space.String() + "/editVersion/" + version.String(),
+    }
+
+    showSimpleMessagePage(httpResponseWriter, request, simpleMessagePageObject)
+    return
 }

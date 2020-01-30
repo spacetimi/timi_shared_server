@@ -1,7 +1,11 @@
 package metadata_service
 
 import (
+    "crypto/md5"
+    "encoding/hex"
+    "encoding/json"
     "errors"
+    "github.com/spacetimi/timi_shared_server/code/config"
     "github.com/spacetimi/timi_shared_server/code/core"
     "github.com/spacetimi/timi_shared_server/code/core/services/metadata_service/metadata_fetchers"
     "github.com/spacetimi/timi_shared_server/code/core/services/metadata_service/metadata_typedefs"
@@ -86,6 +90,24 @@ func (msa *MetadataServiceSpace) getMetadataManifestForVersion(version *core.App
     return manifest, nil
 }
 
+/**
+ * Only meant to be called from the admin tool / scripts
+ */
+func (msa *MetadataServiceSpace) setMetadataManifestForVersion(manifest *metadata_typedefs.MetadataManifest, version *core.AppVersion) error {
+    if msa.mdVersionList.IsVersionValid(version) == false {
+        return errors.New("invalid version")
+    }
+
+    msa.mdManifests[version.String()] = manifest
+
+    err :=  msa.mdFetcher.SetMetadataManifestForVersion(manifest, version.String())
+    if err != nil {
+        return errors.New("error saving new manifest|error=" + err.Error())
+    }
+
+    return nil
+}
+
 func (msa *MetadataServiceSpace) isMetadataHashUpToDate(key string, hash string, version *core.AppVersion) (bool, error) {
     manifest, err := msa.getMetadataManifestForVersion(version)
     if err != nil {
@@ -131,6 +153,64 @@ func (msa *MetadataServiceSpace) getMetadataJsonForItem(itemPtr metadata_typedef
         return "", errors.New("failed to find metadata from fetcher")
     }
     return metadataJson, nil
+}
+
+/**
+ * Only meant to be called from the admin tool / scripts
+ */
+func (msa *MetadataServiceSpace) setMetadataJsonForItem(itemPtr metadata_typedefs.IMetadataItem, version *core.AppVersion) error {
+    if msa.mdVersionList.IsVersionValid(version) == false {
+        return errors.New("invalid version")
+    }
+
+    var err error
+    var metadataJsonBytes []byte
+    if config.GetEnvironmentConfiguration().AppEnvironment == config.PRODUCTION {
+        metadataJsonBytes, err = json.Marshal(itemPtr)
+    } else {
+        metadataJsonBytes, err = json.MarshalIndent(itemPtr, "", "    ")
+    }
+    if err != nil {
+        return errors.New("error deserializing metadata|error=" + err.Error())
+    }
+    metadataJson := string(metadataJsonBytes)
+
+    // If version is marked as current, also update the cache
+    if msa.mdVersionList.IsVersionCurrent(version) {
+
+        cachedMetadataForVersion, ok := msa.mdCache[version.String()]
+        if !ok {
+            logger.LogError("failed to find cached metadata while writing" +
+                            "|metadata space=" + itemPtr.GetMetadataSpace().String() +
+                            "|metadata item key=" + itemPtr.GetKey() +
+                            "|version=" + version.String())
+            return errors.New("failed to find cached metadata for version (this should theoretically never happen)")
+        }
+        cachedMetadataForVersion.Cache[itemPtr.GetKey()] = metadataJson
+    }
+
+    // Save the metadata item
+    err = msa.mdFetcher.SetMetadataJsonByKey(itemPtr.GetKey(), metadataJson, version.String())
+    if err != nil {
+        return errors.New("error saving metadata json|error=" + err.Error())
+    }
+
+    // Generate hash of the file's contents
+    hashBytes := md5.Sum([]byte(metadataJson))
+    hash := hex.EncodeToString(hashBytes[:])
+
+    // Update the metadata manifest for this version
+    manifest, err := msa.getMetadataManifestForVersion(version)
+    if err != nil {
+        return errors.New("error getting metadata manifest for version|error=" + err.Error())
+    }
+    manifest.SetManifestItem(itemPtr.GetKey(), hash)
+    err = msa.setMetadataManifestForVersion(manifest, version)
+    if err != nil {
+        return errors.New("error updating metadata manifest for version|error=" + err.Error())
+    }
+
+    return nil
 }
 
 /**
