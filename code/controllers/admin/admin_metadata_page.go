@@ -515,7 +515,8 @@ func showMetadataUploadPage(httpResponseWriter http.ResponseWriter, request *htt
         return
     }
 
-    err = metadata_service.Instance().SetMetadataItem(metadataItem, version)
+    defer metadata_service.ReleaseInstanceRW()
+    err = metadata_service.InstanceRW().SetMetadataItem(metadataItem, version)
     if err != nil {
         simpleMessagePageObject := AdminSimpleMessageObject{
             AdminPageObject: adminPageObject,
@@ -533,6 +534,12 @@ func showMetadataUploadPage(httpResponseWriter http.ResponseWriter, request *htt
         SimpleMessage: "Successfully saved metadata for " + metadataItemKey,
         BackLinkHref: "/admin/metadata/" + space.String() + "/editVersion/" + version.String(),
     }
+
+
+    logger.LogInfo("Updated metadata item" +
+                   "|metadata space=" + space.String() +
+                   "|version=" + version.String() +
+                   "|metadata item key=" + metadataItemKey)
 
     showSimpleMessagePage(httpResponseWriter, request, simpleMessagePageObject)
     return
