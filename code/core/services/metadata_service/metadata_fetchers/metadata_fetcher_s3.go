@@ -40,7 +40,17 @@ func (mf *MetadataFetcherS3) GetMetadataJsonByKey(key string, version string) (s
  * Only meant to be called from the admin tool / scripts
  */
 func (mf *MetadataFetcherS3) SetMetadataJsonByKey(key string, metadataJson string, version string) error {
-    logger.LogFatal("not implemented exception")
+
+    awsSession, err := aws_helper.GetNewDefaultSession()
+    if err != nil {
+        return errors.New("error creating aws session: " + err.Error())
+    }
+
+    err = aws_helper.UploadToS3(awsSession, []byte(metadataJson), mf.adminS3BucketName, "metadata/" + version + "/" + key + ".json")
+    if err != nil {
+        return errors.New("error uploading metadata item: " + err.Error())
+    }
+
     return nil
 }
 
@@ -96,7 +106,27 @@ func (mf *MetadataFetcherS3) GetMetadataManifestForVersion(version string) (*met
  * Only meant to be called from the admin tool / scripts
  */
 func (mf *MetadataFetcherS3) SetMetadataManifestForVersion(manifest *metadata_typedefs.MetadataManifest, version string) error {
-    logger.LogFatal("not implemented exception")
+    var err error
+	var manifestJson []byte
+	if config.GetEnvironmentConfiguration().AppEnvironment == config.PRODUCTION {
+		manifestJson, err = json.Marshal(manifest)
+    } else {
+		manifestJson, err = json.MarshalIndent(manifest, "", "    ")
+	}
+	if err != nil {
+		return errors.New("error serializing new manifest|error=" + err.Error())
+	}
+
+    awsSession, err := aws_helper.GetNewDefaultSession()
+    if err != nil {
+        return errors.New("error creating aws session: " + err.Error())
+    }
+
+    err = aws_helper.UploadToS3(awsSession, manifestJson, mf.adminS3BucketName, "metadata/" + version + "/MetadataManifest.json")
+    if err != nil {
+        return errors.New("error uploading metadata manifest: " + err.Error())
+    }
+
     return nil
 }
 
