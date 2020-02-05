@@ -34,6 +34,7 @@ type EnvironmentConfiguration struct {
 	// MetaData config
 	SharedMetadataSourceURL string
 	AppMetadataSourceURL string
+	MetadataAutoUpdaterPollSeconds int
 
 	// Admin tool config
 	AdminToolConfig AdminToolConfiguration

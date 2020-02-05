@@ -48,7 +48,7 @@ func RefreshLastUpdatedTimestamps() {
 func startAutoUpdater(space metadata_typedefs.MetadataSpace) {
     RefreshLastUpdatedTimestamps()
 
-    ticker := time.NewTicker(time.Second * 10)
+    ticker := time.NewTicker(time.Second * time.Duration(config.GetEnvironmentConfiguration().MetadataAutoUpdaterPollSeconds))
     for range ticker.C {
         if !checkIfMetadataUpToDate(space) {
             logger.LogInfo("refresh triggered to re-fetch stale metadata" +
