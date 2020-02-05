@@ -3,6 +3,7 @@ package admin
 import (
     "bytes"
     "encoding/json"
+    "errors"
     "fmt"
     "github.com/spacetimi/timi_shared_server/code/config"
     "github.com/spacetimi/timi_shared_server/code/core"
@@ -225,6 +226,12 @@ func updateNewCurrentVersions(space metadata_typedefs.MetadataSpace, newCurrentV
                         "|error=" + err.Error())
         return err
     }
+
+    err = metadata_service.MarkMetadataAsUpdated(space)
+    if err != nil {
+        return errors.New("error marking metadata as updated: " + err.Error())
+    }
+    metadata_service.RefreshLastUpdatedTimestamps()
 
     logger.LogInfo("Updated current versions for metadata space: " + space.String() +
                    " to: " + newCurrentVersionsCSV)
@@ -529,12 +536,24 @@ func showMetadataUploadPage(httpResponseWriter http.ResponseWriter, request *htt
         return
     }
 
+    err = metadata_service.MarkMetadataAsUpdated(space)
+    if err != nil {
+         simpleMessagePageObject := AdminSimpleMessageObject{
+            AdminPageObject: adminPageObject,
+            SimpleMessage: "Error marking metadata as updated: " + err.Error(),
+            BackLinkHref: "/admin/metadata/" + space.String() + "/editVersion/" + version.String(),
+        }
+
+        showSimpleMessagePage(httpResponseWriter, request, simpleMessagePageObject)
+        return
+    }
+    metadata_service.RefreshLastUpdatedTimestamps()
+
     simpleMessagePageObject := AdminSimpleMessageObject{
         AdminPageObject: adminPageObject,
         SimpleMessage: "Successfully saved metadata for " + metadataItemKey,
         BackLinkHref: "/admin/metadata/" + space.String() + "/editVersion/" + version.String(),
     }
-
 
     logger.LogInfo("Updated metadata item" +
                    "|metadata space=" + space.String() +

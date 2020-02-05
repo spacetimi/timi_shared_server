@@ -17,6 +17,8 @@ type MetadataService struct {
 func Initialize() {
     // This is during Initialization. No need to take mutex lock
 	instance = createInstance()
+	go startAutoUpdater(metadata_typedefs.METADATA_SPACE_SHARED)
+	go startAutoUpdater(metadata_typedefs.METADATA_SPACE_APP)
 }
 
 func createInstance() *MetadataService {
@@ -45,10 +47,10 @@ func Instance() *MetadataService {
  * Only meant to be called from the admin tool / scripts
  *
  * This will create a new copy of instance so that any other requests
- * that are currently working with the oldd copy of instance
+ * that are currently working with the old copy of instance
  * will go through using the old copy
  * Any requests that try to get a copy of instance while it is being modified here will have to wait
- * till the instance creation is complete
+ * till the RW-instance is released
  */
 func InstanceRW() *MetadataService {
 	mutexForInstance.Lock()

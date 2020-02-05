@@ -1,15 +1,16 @@
 package redis_adaptor
 
 import (
-	"fmt"
+	"errors"
 	"github.com/go-redis/redis"
 	"github.com/spacetimi/timi_shared_server/code/config"
+	"github.com/spacetimi/timi_shared_server/utils/logger"
 )
 
 var Client *redis.Client
 
 func Initialize() {
-	fmt.Println("Trying to connect to redis at: " + config.GetEnvironmentConfiguration().SharedRedisURL)
+	logger.LogInfo("Trying to connect to redis|redis url=" + config.GetEnvironmentConfiguration().SharedRedisURL)
 
 	Client = redis.NewClient(&redis.Options {
 		Addr:     config.GetEnvironmentConfiguration().SharedRedisURL,
@@ -18,30 +19,29 @@ func Initialize() {
 	})
 }
 
-func Ping() bool {
-	pong, err := Client.Ping().Result()
+func Ping() (bool, error) {
+	_, err := Client.Ping().Result()
 	if err != nil {
-		panic("Redis ping failed: " + err.Error())
-		return false
+		return false, errors.New("error pinging redis: " + err.Error())
 	}
 
-	fmt.Println(pong)
-	return true
+	return true, nil
 }
 
-func Read(key string) string {
+func Read(key string) (string, bool) {
 	val, err := Client.Get(key).Result()
 	if err != nil {
-		panic("Failed to find value for key: " + err.Error())
+		return "", false
 	}
-	fmt.Println(key + ":" + val)
 
-	return val
+	return val, true
 }
 
-func Write(key string, value string) {
+func Write(key string, value string) error {
 	err := Client.Set(key, value, 0).Err()
 	if err != nil {
-		panic("Failed to set value for key: " + key + ". " + err.Error())
+		return errors.New("error writing value for key: " + err.Error())
 	}
+
+	return nil
 }

@@ -30,13 +30,19 @@ func TestController(httpResponseWriter http.ResponseWriter, request *http.Reques
 }
 
 func PingRedisController(httpResponseWriter http.ResponseWriter, request *http.Request) {
-	if redis_adaptor.Ping() {
+	pingOk, err := redis_adaptor.Ping()
+	if pingOk {
 		fmt.Fprintln(httpResponseWriter, "Redis ping successful")
 		redis_adaptor.Write("test_key", strconv.Itoa(rand.Int()))
-		fmt.Fprintln(httpResponseWriter, "Value: " + redis_adaptor.Read("test_key"))
+		value, ok := redis_adaptor.Read("test_key")
+		if ok {
+			fmt.Fprintln(httpResponseWriter, "Value: " + value)
+		} else {
+			fmt.Fprintln(httpResponseWriter, "Redis read returned empty")
+		}
 
 	} else {
-		fmt.Fprintf(httpResponseWriter, "Mongodb ping failed")
+		fmt.Fprintf(httpResponseWriter, "Redis ping failed|error=" + err.Error())
 	}
 }
 
