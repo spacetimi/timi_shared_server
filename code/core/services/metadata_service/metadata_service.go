@@ -88,9 +88,9 @@ func (ms *MetadataService) SetCurrentVersions(newCurrentVersionStrings []string,
 	    version, err := core.GetAppVersionFromString(versionString)
 	    if err != nil {
 	    	logger.LogError("Error parsing app version" +
-				"|metadata space=" + space.String() +
-	    		"|version string=" + versionString +
-	    		"|error=" + err.Error())
+							"|metadata space=" + space.String() +
+	    					"|version string=" + versionString +
+	    					"|error=" + err.Error())
 	    	continue
 		}
 		newCurrentVersions = append(newCurrentVersions, version)

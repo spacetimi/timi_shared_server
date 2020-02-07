@@ -218,7 +218,7 @@ func (msa *MetadataServiceSpace) setMetadataJsonForItem(itemPtr metadata_typedef
  */
 func (msa *MetadataServiceSpace) setCurrentVersions(newCurrentVersions []*core.AppVersion) error {
     if len(newCurrentVersions) == 0 {
-        return errors.New("current version list cannot be empty")
+        return errors.New("new current versions list cannot be empty")
     }
 
     msa.mdVersionList.CurrentVersions = nil

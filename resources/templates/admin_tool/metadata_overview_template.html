@@ -14,7 +14,23 @@
             </div>
 
             <div class="container-fluid bg-white justify-content-center pt-2 pb-3 border border-info rounded-bottom">
-                <div class="container">
+                <div class="container-fluid">
+
+                    {{ if not .MetadataInfo.IsUpToDate }}
+                    <div class="row bg-warning pt-3 pb-3 border border-info rounded">
+                        <div class="col-md-9 p-2">
+                            &nbsp;
+                            &nbsp;
+                            <img src="/images/warning_sign.png">
+                            Some Metadata has been modified in the background. Please hit Refresh.
+                        </div>
+                        <div class="col-md-3">
+                            <form method="get">
+                                <button type="submit" id="refresh_button" formaction="/admin/metadata/{{ .MetadataInfo.Space }}/refresh" onclick="showLoadingSpinner('refresh_button')" class="btn btn-primary float-right">Refresh</button>
+                            </form>
+                        </div>
+                    </div>
+                    {{ end }}
 
                     <br/>
 
@@ -63,7 +79,7 @@
                                         </div>
                                         <div class="modal-footer">
                                             <button type="button" id="close_button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                            <button type="submit" id="edit_button" formaction="/admin/metadata/{{ .MetadataInfo.Space }}/setCurrentVersions" onclick="showLoadingSpinner()" class="btn btn-primary">Save</button>
+                                            <button type="submit" id="save_button" formaction="/admin/metadata/{{ .MetadataInfo.Space }}/setCurrentVersions" onclick="showLoadingSpinner('save_button')" class="btn btn-primary">Save</button>
                                         </div>
                                     </form>
                                 </div>
@@ -100,11 +116,11 @@
 </div>
 
 <script>
-    function showLoadingSpinner() {
-        document.getElementById("edit_button").innerHTML = "\
+    function showLoadingSpinner(targetElementId) {
+        document.getElementById(targetElementId).innerHTML = "\
                         <button id=\"loading_spinner\" style=\"visibility: visible\" class=\"btn btn-primary\" type=\"button\" disabled>\
                             <span class=\"spinner-grow spinner-grow-sm\" role=\"status\" aria-hidden=\"true\"></span>\
-                            Saving...\
+                            Loading...\
                         </button>";
         document.getElementById("close_button").style.visibility = "hidden";
     }

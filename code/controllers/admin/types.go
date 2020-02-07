@@ -35,6 +35,7 @@ type MetadataInfo struct {
     CurrentVersions []string
     CurrentVersionsCSV string
     AllVersions []string
+    IsUpToDate bool
 }
 
 type AdminMetadataItem struct {

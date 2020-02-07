@@ -32,6 +32,8 @@ const kMetadataRoute_AppDownload = "METADATA_APP_DOWNLOAD"
 const kMetadataRoute_SharedDownload = "METADATA_SHARED_DOWNLOAD"
 const kMetadataRoute_AppUpload = "METADATA_APP_UPLOAD"
 const kMetadataRoute_SharedUpload = "METADATA_SHARED_UPLOAD"
+const kMetadataRoute_AppRefresh = "METADATA_APP_REFRESH"
+const kMetadataRoute_SharedRefresh = "METADATA_SHARED_REFRESH"
 
 var kAdminMetadataRoutes = map[string]string{
     "/admin/metadata$": kMetadataRoute_SelectSpace,
@@ -41,12 +43,14 @@ var kAdminMetadataRoutes = map[string]string{
     "/admin/metadata/app/view/[0-9]+\\.[0-9]+/.*$": kMetadataRoute_AppViewMetadata,
     "/admin/metadata/app/download/[0-9]+\\.[0-9]+/.*$": kMetadataRoute_AppDownload,
     "/admin/metadata/app/upload/[0-9]+\\.[0-9]+/.*$": kMetadataRoute_AppUpload,
+    "/admin/metadata/app/refresh$": kMetadataRoute_AppRefresh,
     "/admin/metadata/shared$": kMetadataRoute_SharedOverview,
     "/admin/metadata/shared/setCurrentVersions$": kMetadataRoute_SharedOverview,
     "/admin/metadata/shared/editVersion/[0-9]+\\.[0-9]+$": kMetadataRoute_SharedEditVersion,
     "/admin/metadata/shared/view/[0-9]+\\.[0-9]+/.*$": kMetadataRoute_SharedViewMetadata,
     "/admin/metadata/shared/download/[0-9]+\\.[0-9]+/.*$": kMetadataRoute_SharedDownload,
     "/admin/metadata/shared/upload/[0-9]+\\.[0-9]+/.*$": kMetadataRoute_SharedUpload,
+    "/admin/metadata/shared/refresh$": kMetadataRoute_SharedRefresh,
 }
 
 var kAdminMetadataRouteRegexToRouteName map[*regexp.Regexp]string
@@ -102,6 +106,10 @@ func showAdminMetadataPage(httpResponseWriter http.ResponseWriter, request *http
         showMetadataUploadPage(httpResponseWriter, request, adminPageObject, metadata_typedefs.METADATA_SPACE_APP)
         return
 
+    case kMetadataRoute_AppRefresh:
+        refreshMetadata(httpResponseWriter, request, metadata_typedefs.METADATA_SPACE_APP)
+        return
+
     case kMetadataRoute_SharedOverview:
         showMetadataOverviewPage(httpResponseWriter, request, adminPageObject, metadata_typedefs.METADATA_SPACE_SHARED)
         return
@@ -122,11 +130,20 @@ func showAdminMetadataPage(httpResponseWriter http.ResponseWriter, request *http
         showMetadataUploadPage(httpResponseWriter, request, adminPageObject, metadata_typedefs.METADATA_SPACE_SHARED)
         return
 
+    case kMetadataRoute_SharedRefresh:
+        refreshMetadata(httpResponseWriter, request, metadata_typedefs.METADATA_SPACE_SHARED)
+        return
+
     default:
         logger.LogWarning("Unknown metadata route request|request url=" + request.URL.Path)
     }
 }
 
+func refreshMetadata(httpResponseWriter http.ResponseWriter, request *http.Request, fromSpace metadata_typedefs.MetadataSpace) {
+    metadata_service.RefreshMetadata()
+
+    http.Redirect(httpResponseWriter, request, "/admin/metadata/" + fromSpace.String(), http.StatusSeeOther)
+}
 
 func showMetadataSelectPage(httpResponseWriter http.ResponseWriter, request *http.Request, adminPageObject AdminPageObject) {
     templates, err := template.ParseGlob(config.GetTemplateFilesPath() + "/admin_tool/*")
@@ -157,11 +174,12 @@ func showMetadataOverviewPage(httpResponseWriter http.ResponseWriter, request *h
     sort.Strings(allVersionsSorted)
     sort.Sort(sort.Reverse(sort.StringSlice(allVersionsSorted)))
 
-    pageObject.MetadataInfo = MetadataInfo{
-        Space:space.String(),
+    pageObject.MetadataInfo = MetadataInfo {
+        Space: space.String(),
         CurrentVersions: metadata_service.Instance().GetCurrentVersions(space),
         CurrentVersionsCSV: strings.Join(metadata_service.Instance().GetCurrentVersions(space), ","),
         AllVersions: allVersionsSorted,
+        IsUpToDate: metadata_service.CheckIfMetadataUpToDate(space),
     }
 
     // Check post arguments
@@ -177,12 +195,22 @@ func showMetadataOverviewPage(httpResponseWriter http.ResponseWriter, request *h
     newCurrentVersionsCSV := request.Form.Get("currentVersionsCSV")
     // If new current csv arguments are sent, try to update and redirect to show success / failure
     if newCurrentVersionsCSV != "" {
-        err := updateNewCurrentVersions(space, newCurrentVersionsCSV)
-        messageToShow := "Successfully updated current versions."
-        if err != nil {
-            messageToShow = "Something went wrong updating current versions."
+        var messageToShow string
+
+        metadataUpToDate := metadata_service.CheckIfMetadataUpToDate(space)
+        if !metadataUpToDate {
+            messageToShow = "Metadata not up to date. Please hit Refresh and try again."
             pageObject.HasError = true
-            pageObject.ErrorString = err.Error()
+            pageObject.ErrorString = "stale metadata for space: " + space.String()
+
+        } else {
+            err := updateNewCurrentVersions(space, newCurrentVersionsCSV)
+            messageToShow = "Successfully updated current versions."
+            if err != nil {
+                messageToShow = "Something went wrong updating current versions."
+                pageObject.HasError = true
+                pageObject.ErrorString = err.Error()
+            }
         }
 
         simpleMessagePageObject := AdminSimpleMessageObject{
@@ -220,10 +248,6 @@ func updateNewCurrentVersions(space metadata_typedefs.MetadataSpace, newCurrentV
     defer metadata_service.ReleaseInstanceRW()
     err := metadata_service.InstanceRW().SetCurrentVersions(newCurrentVersions, space)
     if err != nil {
-        logger.LogError("error updating metadata current version" +
-                        "|metadata space=" + space.String() +
-                        "|new current versions=" + newCurrentVersionsCSV +
-                        "|error=" + err.Error())
         return err
     }
 
@@ -282,6 +306,18 @@ func showMetadataEditVersionPage(httpResponseWriter http.ResponseWriter, request
 
 
     pageObject.Version = version.String()
+
+    metadataUpToDate := metadata_service.CheckIfMetadataUpToDate(space)
+    if !metadataUpToDate {
+        simpleMessagePageObject := AdminSimpleMessageObject{
+            AdminPageObject: pageObject.AdminPageObject,
+            SimpleMessage: "Metadata not up to date. Please hit Refresh and try again.",
+            BackLinkHref: "/admin/metadata/" + space.String(),
+        }
+
+        showSimpleMessagePage(httpResponseWriter, request, simpleMessagePageObject)
+        return
+    }
 
     metadataItems, err := metadata_service.Instance().GetMetadataItemsInVersion(version.String(), space)
     if err != nil {
@@ -448,6 +484,18 @@ func showMetadataUploadPage(httpResponseWriter http.ResponseWriter, request *htt
             AdminPageObject: adminPageObject,
             SimpleMessage: "Invalid version: " + err.Error(),
             BackLinkHref: "/admin/metadata/" + space.String() + "/editVersion/" + version.String(),
+        }
+
+        showSimpleMessagePage(httpResponseWriter, request, simpleMessagePageObject)
+        return
+    }
+
+    metadataUpToDate := metadata_service.CheckIfMetadataUpToDate(space)
+    if !metadataUpToDate {
+        simpleMessagePageObject := AdminSimpleMessageObject{
+            AdminPageObject: adminPageObject,
+            SimpleMessage: "Metadata not up to date. Please hit Refresh and try again." + err.Error(),
+            BackLinkHref: "/admin/metadata/" + space.String(),
         }
 
         showSimpleMessagePage(httpResponseWriter, request, simpleMessagePageObject)

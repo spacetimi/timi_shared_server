@@ -40,32 +40,19 @@ func MarkMetadataAsUpdated(space metadata_typedefs.MetadataSpace) error {
     return nil
 }
 
-func RefreshLastUpdatedTimestamps() {
-    lastUpdatedSharedTimestamp = time.Now().Unix()
-    lastUpdatedAppTimestamp    = time.Now().Unix()
-}
-
-func startAutoUpdater(space metadata_typedefs.MetadataSpace) {
-    RefreshLastUpdatedTimestamps()
-
-    ticker := time.NewTicker(time.Second * time.Duration(config.GetEnvironmentConfiguration().MetadataAutoUpdaterPollSeconds))
-    for range ticker.C {
-        if !checkIfMetadataUpToDate(space) {
-            logger.LogInfo("refresh triggered to re-fetch stale metadata" +
-                           "|space=" + space.String())
-            refreshMetadata()
-        }
-    }
-}
-
-func refreshMetadata() {
+func RefreshMetadata() {
     defer ReleaseInstanceRW()
     _ = InstanceRW()
 
     RefreshLastUpdatedTimestamps()
 }
 
-func checkIfMetadataUpToDate(space metadata_typedefs.MetadataSpace) bool {
+func RefreshLastUpdatedTimestamps() {
+    lastUpdatedSharedTimestamp = time.Now().Unix()
+    lastUpdatedAppTimestamp    = time.Now().Unix()
+}
+
+func CheckIfMetadataUpToDate(space metadata_typedefs.MetadataSpace) bool {
     var key string
     var lastUpdatedTimestamp int64
     if space == metadata_typedefs.METADATA_SPACE_SHARED {
@@ -98,4 +85,16 @@ func checkIfMetadataUpToDate(space metadata_typedefs.MetadataSpace) bool {
     return true
 }
 
+func startAutoUpdater(space metadata_typedefs.MetadataSpace) {
+    RefreshLastUpdatedTimestamps()
+
+    ticker := time.NewTicker(time.Second * time.Duration(config.GetEnvironmentConfiguration().MetadataAutoUpdaterPollSeconds))
+    for range ticker.C {
+        if !CheckIfMetadataUpToDate(space) {
+            logger.LogInfo("refresh triggered to re-fetch stale metadata" +
+                           "|space=" + space.String())
+            RefreshMetadata()
+        }
+    }
+}
 
