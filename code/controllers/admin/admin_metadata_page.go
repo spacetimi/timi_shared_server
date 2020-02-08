@@ -1,6 +1,7 @@
 package admin
 
 import (
+    "archive/zip"
     "bytes"
     "encoding/json"
     "errors"
@@ -30,6 +31,8 @@ const kMetadataRoute_AppViewMetadata = "METADATA_APP_VIEW_METADATA"
 const kMetadataRoute_SharedViewMetadata = "METADATA_SHARED_VIEW_METADATA"
 const kMetadataRoute_AppDownload = "METADATA_APP_DOWNLOAD"
 const kMetadataRoute_SharedDownload = "METADATA_SHARED_DOWNLOAD"
+const kMetadataRoute_AppDownloadAll = "METADATA_APP_DOWNLOAD_ALL"
+const kMetadataRoute_SharedDownloadAll = "METADATA_SHARED_DOWNLOAD_ALL"
 const kMetadataRoute_AppUpload = "METADATA_APP_UPLOAD"
 const kMetadataRoute_SharedUpload = "METADATA_SHARED_UPLOAD"
 const kMetadataRoute_AppRefresh = "METADATA_APP_REFRESH"
@@ -42,6 +45,7 @@ var kAdminMetadataRoutes = map[string]string{
     "/admin/metadata/app/editVersion/[0-9]+\\.[0-9]+$": kMetadataRoute_AppEditVersion,
     "/admin/metadata/app/view/[0-9]+\\.[0-9]+/.*$": kMetadataRoute_AppViewMetadata,
     "/admin/metadata/app/download/[0-9]+\\.[0-9]+/.*$": kMetadataRoute_AppDownload,
+    "/admin/metadata/app/download_all/[0-9]+\\.[0-9]+$": kMetadataRoute_AppDownloadAll,
     "/admin/metadata/app/upload/[0-9]+\\.[0-9]+/.*$": kMetadataRoute_AppUpload,
     "/admin/metadata/app/refresh$": kMetadataRoute_AppRefresh,
     "/admin/metadata/shared$": kMetadataRoute_SharedOverview,
@@ -49,6 +53,7 @@ var kAdminMetadataRoutes = map[string]string{
     "/admin/metadata/shared/editVersion/[0-9]+\\.[0-9]+$": kMetadataRoute_SharedEditVersion,
     "/admin/metadata/shared/view/[0-9]+\\.[0-9]+/.*$": kMetadataRoute_SharedViewMetadata,
     "/admin/metadata/shared/download/[0-9]+\\.[0-9]+/.*$": kMetadataRoute_SharedDownload,
+    "/admin/metadata/shared/download_all/[0-9]+\\.[0-9]+$": kMetadataRoute_SharedDownloadAll,
     "/admin/metadata/shared/upload/[0-9]+\\.[0-9]+/.*$": kMetadataRoute_SharedUpload,
     "/admin/metadata/shared/refresh$": kMetadataRoute_SharedRefresh,
 }
@@ -102,6 +107,10 @@ func showAdminMetadataPage(httpResponseWriter http.ResponseWriter, request *http
         showMetadataViewOrDownloadPage(httpResponseWriter, request, adminPageObject, metadata_typedefs.METADATA_SPACE_APP, false)
         return
 
+    case kMetadataRoute_AppDownloadAll:
+        showMetadataDownloadAllPage(httpResponseWriter, request, adminPageObject, metadata_typedefs.METADATA_SPACE_APP)
+        return
+
     case kMetadataRoute_AppUpload:
         showMetadataUploadPage(httpResponseWriter, request, adminPageObject, metadata_typedefs.METADATA_SPACE_APP)
         return
@@ -124,6 +133,10 @@ func showAdminMetadataPage(httpResponseWriter http.ResponseWriter, request *http
 
     case kMetadataRoute_SharedDownload:
         showMetadataViewOrDownloadPage(httpResponseWriter, request, adminPageObject, metadata_typedefs.METADATA_SPACE_SHARED, false)
+        return
+
+    case kMetadataRoute_SharedDownloadAll:
+        showMetadataDownloadAllPage(httpResponseWriter, request, adminPageObject, metadata_typedefs.METADATA_SPACE_SHARED)
         return
 
     case kMetadataRoute_SharedUpload:
@@ -392,23 +405,7 @@ func showMetadataViewOrDownloadPage(httpResponseWriter http.ResponseWriter, requ
         return
     }
 
-
-    metadataItem, err := metadata_factory.InstantiateMetadataItem(metadataItemKey)
-    if err != nil {
-        logger.LogError("failed to instantiate metadata item in admin metadata download" +
-                        "|metadata item key=" + metadataItemKey +
-                        "|error=" + err.Error())
-        simpleMessagePageObject := AdminSimpleMessageObject{
-            AdminPageObject: adminPageObject,
-            SimpleMessage: "Failed to instantiate metadata item: " + err.Error(),
-            BackLinkHref: "/admin/metadata/" + space.String() + "/editVersion/" + version.String(),
-        }
-
-        showSimpleMessagePage(httpResponseWriter, request, simpleMessagePageObject)
-        return
-    }
-
-    err = metadata_service.Instance().GetMetadataItem(metadataItem, version)
+    content, err := metadata_service.Instance().GetMetadataItemRawContent(metadataItemKey, version, space)
     if err != nil {
         logger.LogError("failed to fetch metadata item in admin metadata download" +
                         "|metadata item key=" + metadataItemKey +
@@ -423,24 +420,9 @@ func showMetadataViewOrDownloadPage(httpResponseWriter http.ResponseWriter, requ
         return
     }
 
-    content, err := json.Marshal(metadataItem)
-    if err != nil {
-        logger.LogError("failed to serialize metadata item in admin metadata download" +
-                        "|metadata item key=" + metadataItemKey +
-                        "|error=" + err.Error())
-        simpleMessagePageObject := AdminSimpleMessageObject{
-            AdminPageObject: adminPageObject,
-            SimpleMessage: "Failed to serialize metadata item: " + err.Error(),
-            BackLinkHref: "/admin/metadata/" + space.String() + "/editVersion/" + version.String(),
-        }
-
-        showSimpleMessagePage(httpResponseWriter, request, simpleMessagePageObject)
-        return
-    }
-
     if viewOnly {
         // Just write out the serialized metadata item
-        _, err := fmt.Fprintln(httpResponseWriter, string(content))
+        _, err := fmt.Fprintln(httpResponseWriter, content)
         if err != nil {
             logger.LogError("error writing metadata json" +
                 "|metadata item key=" + metadataItemKey +
@@ -454,6 +436,114 @@ func showMetadataViewOrDownloadPage(httpResponseWriter http.ResponseWriter, requ
 
         http.ServeContent(httpResponseWriter, request, metadataItemKey + ".json", time.Now(), bytes.NewReader([]byte(content)))
     }
+}
+
+func showMetadataDownloadAllPage(httpResponseWriter http.ResponseWriter, request *http.Request, adminPageObject AdminPageObject, space metadata_typedefs.MetadataSpace) {
+
+    // Parse url for version
+    tokens := strings.Split(request.URL.Path, "/")
+    if len(tokens) < 2 {
+        logger.LogError("malformed request url in metadata download all request" +
+                        "|request url=" + request.URL.Path)
+        httpResponseWriter.WriteHeader(http.StatusNotFound)
+        return
+    }
+    versionString := tokens[len(tokens) - 1]
+
+    version, err := core.GetAppVersionFromString(versionString)
+    if err != nil {
+        logger.LogError("error parsing version from url" +
+                        "|request url=" + request.URL.Path +
+                        "|error=" + err.Error())
+        httpResponseWriter.WriteHeader(http.StatusNotFound)
+        return
+    }
+
+    validVersion, err := metadata_service.Instance().IsVersionValid(version.String(), space)
+    if !validVersion {
+        simpleMessagePageObject := AdminSimpleMessageObject{
+            AdminPageObject: adminPageObject,
+            SimpleMessage: "Invalid version: " + err.Error(),
+            BackLinkHref: "/admin/metadata/" + space.String(),
+        }
+
+        showSimpleMessagePage(httpResponseWriter, request, simpleMessagePageObject)
+        return
+    }
+
+    manifestItems, err := metadata_service.Instance().GetMetadataItemsInVersion(versionString, space)
+    if len(manifestItems) == 0 {
+        simpleMessagePageObject := AdminSimpleMessageObject{
+            AdminPageObject: adminPageObject,
+            SimpleMessage: "Couldn't get metadata items for version. Error: " + err.Error(),
+            BackLinkHref: "/admin/metadata/" + space.String(),
+        }
+
+        showSimpleMessagePage(httpResponseWriter, request, simpleMessagePageObject)
+        return
+    }
+
+    hasError := false
+    var errorList []string
+
+    zipBuffer := new(bytes.Buffer)
+    zipWriter := zip.NewWriter(zipBuffer)
+
+    for _, manifestItem := range manifestItems {
+        metadataItemJson, err := metadata_service.Instance().GetMetadataItemRawContent(manifestItem.MetadataKey, version, space)
+        if err != nil {
+            hasError = true
+            errorList = append(errorList, "error fetching metadata item for key: " + manifestItem.MetadataKey +
+                                          ". Error: " + err.Error())
+            continue
+        }
+
+        fileWriter, err := zipWriter.Create(manifestItem.MetadataKey + ".json")
+        if err != nil {
+            hasError = true
+            errorList = append(errorList, "error adding file to zip archive for metadata item key: " + manifestItem.MetadataKey +
+                                          ". Error: " + err.Error())
+            continue
+        }
+        _, err = fileWriter.Write([]byte(metadataItemJson))
+        if err != nil {
+            hasError = true
+            errorList = append(errorList, "error writing metadata item json to zip archive for metadata item key: " + manifestItem.MetadataKey +
+                                          ". Error: " + err.Error())
+            continue
+        }
+    }
+
+    err = zipWriter.Close()
+    if err != nil {
+        hasError = true
+        errorList = append(errorList, "error closing zip writer for download all metadata" +
+                                      ". Error: " + err.Error())
+    }
+
+    if hasError {
+        simpleMessagePageObject := AdminSimpleMessageObject{
+            AdminPageObject: adminPageObject,
+            SimpleMessage: "Something went wrong while creating downloadable metadata archive. Errors:\n" + strings.Join(errorList, ", "),
+            BackLinkHref: "/admin/metadata/" + space.String(),
+        }
+
+        showSimpleMessagePage(httpResponseWriter, request, simpleMessagePageObject)
+        return
+    }
+
+    var downloadableFileName string
+    if space == metadata_typedefs.METADATA_SPACE_APP {
+        downloadableFileName = config.GetAppName() + ".metadata-" + version.String()
+    } else {
+        downloadableFileName = space.String() + ".metadata-" + version.String()
+    }
+
+    // Mark the returned content as downloadable zip to the browser
+    httpResponseWriter.Header().Set("Content-Type", "application/zip")
+    httpResponseWriter.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s.zip\"", downloadableFileName))
+
+    http.ServeContent(httpResponseWriter, request, downloadableFileName, time.Now(), bytes.NewReader(zipBuffer.Bytes()))
 }
 
 func showMetadataUploadPage(httpResponseWriter http.ResponseWriter, request *http.Request, adminPageObject AdminPageObject, space metadata_typedefs.MetadataSpace) {

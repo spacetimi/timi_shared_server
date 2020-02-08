@@ -16,7 +16,26 @@
                 <div class="container">
                     <div class="row bg-light border border-info rounded">
                         <div class="col-md-12 pt-2 pb-3">
-                            <span class="badge badge-secondary">Metadata Items:</span>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <span class="badge badge-secondary">Metadata Items:</span>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="float-right">
+
+                                    <a href="/admin/metadata/{{ $.Space }}/download_all/{{ $.Version }}" target="_blank" class="btn btn-warning border border-dark rounded-right">
+                                        Download All&nbsp;
+                                        <img src="/images/download_icon.png"></a>
+                                    </a>
+                                    <a href="/admin/metadata/{{ $.Space }}/upload_all/{{ $.Version }}" target="_blank" class="btn btn-danger border border-dark rounded-right">
+                                        Upload All ...&nbsp;
+                                    </a>
+                                    </div>
+                                </div>
+
+                            </div>
+
                             <br/>
                             <br/>
                             {{ range $metadataItem := .Items }}

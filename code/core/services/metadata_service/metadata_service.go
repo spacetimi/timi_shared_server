@@ -212,6 +212,20 @@ func (ms *MetadataService) GetMetadataItem(itemPtr metadata_typedefs.IMetadataIt
 /**
  * Only meant to be called from the admin tool / scripts
  */
+func (ms *MetadataService) GetMetadataItemRawContent(metadataItemKey string, version *core.AppVersion, space metadata_typedefs.MetadataSpace) (string, error) {
+	msa := ms.getMetadataServiceSpace(space)
+
+	metadataItemJson, err := msa.mdFetcher.GetMetadataJsonByKey(metadataItemKey, version.String())
+	if err != nil {
+		return "", errors.New("error fetching metadata item raw content: " + err.Error())
+	}
+
+	return metadataItemJson, nil
+}
+
+/**
+ * Only meant to be called from the admin tool / scripts
+ */
 func (ms *MetadataService) SetMetadataItem(itemPtr metadata_typedefs.IMetadataItem, version *core.AppVersion) error {
 	if itemPtr == nil {
 		logger.LogError("itemPtr is null")
