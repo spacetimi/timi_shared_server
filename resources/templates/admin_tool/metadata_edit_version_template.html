@@ -24,13 +24,37 @@
                                 <div class="col-md-6">
                                     <div class="float-right">
 
-                                    <a href="/admin/metadata/{{ $.Space }}/download_all/{{ $.Version }}" target="_blank" class="btn btn-warning border border-dark rounded-right">
-                                        Download All&nbsp;
-                                        <img src="/images/download_icon.png"></a>
-                                    </a>
-                                    <a href="/admin/metadata/{{ $.Space }}/upload_all/{{ $.Version }}" target="_blank" class="btn btn-danger border border-dark rounded-right">
-                                        Upload All ...&nbsp;
-                                    </a>
+                                        <a href="/admin/metadata/{{ .Space }}/download_all/{{ .Version }}" target="_blank" class="btn btn-warning border border-dark rounded-right">
+                                            Download All&nbsp;
+                                            <img src="/images/download_icon.png"></a>
+                                        </a>
+                                        <button type="button" class="btn btn-danger border border-dark rounded" data-toggle="modal" data-target="#uploadAllModal" data-whatever="@mdo">&nbsp;&nbsp;Upload All&nbsp;...&nbsp;&nbsp;</button>
+                                    </div>
+                                </div>
+                                <div class="modal fade" id="uploadAllModal" tabindex="-1" role="dialog" aria-labelledby="uploadAllEditorTitle" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-dark text-light">
+                                                <h5 class="modal-title" id="uploadAllEditorTitle">Upload metadata for version: {{ .Version }}</h5>
+                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                    <span aria-hidden="true" class="text-light">&times;</span>
+                                                </button>
+                                            </div>
+
+                                            <form method="post" enctype="multipart/form-data">
+                                                <div class="modal-body">
+                                                    <div class="form-group">
+                                                        <h6>Select and upload multiple metadata files. The filenames must match keys of their corresponding metadata items.</h6>
+                                                        <br/>
+                                                        <input type="file" name="uploadedFiles" id="uploadedFiles" multiple>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" id="close_button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                                    <button type="submit" id="upload_all_button" formaction="/admin/metadata/{{ $.Space }}/upload_all/{{ $.Version }}" onclick="showLoadingSpinner('upload_all_button')" class="btn btn-primary">Upload</button>
+                                                </div>
+                                            </form>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -86,7 +110,7 @@
                                                         </div>
                                                         <div class="modal-footer">
                                                             <button type="button" id="close_button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                                            <button type="submit" id="edit_button" formaction="/admin/metadata/{{ $.Space }}/upload/{{ $.Version }}/{{ $metadataItem.Key }}" onclick="showLoadingSpinner()" class="btn btn-primary">Upload</button>
+                                                            <button type="submit" id="upload_new_button" formaction="/admin/metadata/{{ $.Space }}/upload/{{ $.Version }}/{{ $metadataItem.Key }}" onclick="showLoadingSpinner('upload_new_button')" class="btn btn-primary">Upload</button>
                                                         </div>
                                                     </form>
                                                 </div>
@@ -114,8 +138,8 @@
 
 
 <script>
-    function showLoadingSpinner() {
-        document.getElementById("edit_button").innerHTML = "\
+    function showLoadingSpinner(targetElementId) {
+        document.getElementById(targetElementId).innerHTML = "\
                         <button id=\"loading_spinner\" style=\"visibility: visible\" class=\"btn btn-primary\" type=\"button\" disabled>\
                             <span class=\"spinner-grow spinner-grow-sm\" role=\"status\" aria-hidden=\"true\"></span>\
                             Saving...\

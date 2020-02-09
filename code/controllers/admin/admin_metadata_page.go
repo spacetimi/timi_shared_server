@@ -15,6 +15,7 @@ import (
     "html/template"
     "io"
     "net/http"
+    "path"
     "path/filepath"
     "regexp"
     "sort"
@@ -35,6 +36,8 @@ const kMetadataRoute_AppDownloadAll = "METADATA_APP_DOWNLOAD_ALL"
 const kMetadataRoute_SharedDownloadAll = "METADATA_SHARED_DOWNLOAD_ALL"
 const kMetadataRoute_AppUpload = "METADATA_APP_UPLOAD"
 const kMetadataRoute_SharedUpload = "METADATA_SHARED_UPLOAD"
+const kMetadataRoute_AppUploadAll = "METADATA_APP_UPLOAD_ALL"
+const kMetadataRoute_SharedUploadAll = "METADATA_SHARED_UPLOAD_ALL"
 const kMetadataRoute_AppRefresh = "METADATA_APP_REFRESH"
 const kMetadataRoute_SharedRefresh = "METADATA_SHARED_REFRESH"
 
@@ -47,6 +50,7 @@ var kAdminMetadataRoutes = map[string]string{
     "/admin/metadata/app/download/[0-9]+\\.[0-9]+/.*$": kMetadataRoute_AppDownload,
     "/admin/metadata/app/download_all/[0-9]+\\.[0-9]+$": kMetadataRoute_AppDownloadAll,
     "/admin/metadata/app/upload/[0-9]+\\.[0-9]+/.*$": kMetadataRoute_AppUpload,
+    "/admin/metadata/app/upload_all/[0-9]+\\.[0-9]+$": kMetadataRoute_AppUploadAll,
     "/admin/metadata/app/refresh$": kMetadataRoute_AppRefresh,
     "/admin/metadata/shared$": kMetadataRoute_SharedOverview,
     "/admin/metadata/shared/setCurrentVersions$": kMetadataRoute_SharedOverview,
@@ -55,6 +59,7 @@ var kAdminMetadataRoutes = map[string]string{
     "/admin/metadata/shared/download/[0-9]+\\.[0-9]+/.*$": kMetadataRoute_SharedDownload,
     "/admin/metadata/shared/download_all/[0-9]+\\.[0-9]+$": kMetadataRoute_SharedDownloadAll,
     "/admin/metadata/shared/upload/[0-9]+\\.[0-9]+/.*$": kMetadataRoute_SharedUpload,
+    "/admin/metadata/shared/upload_all/[0-9]+\\.[0-9]+$": kMetadataRoute_SharedUploadAll,
     "/admin/metadata/shared/refresh$": kMetadataRoute_SharedRefresh,
 }
 
@@ -115,6 +120,10 @@ func showAdminMetadataPage(httpResponseWriter http.ResponseWriter, request *http
         showMetadataUploadPage(httpResponseWriter, request, adminPageObject, metadata_typedefs.METADATA_SPACE_APP)
         return
 
+    case kMetadataRoute_AppUploadAll:
+        showMetadataUploadAllPage(httpResponseWriter, request, adminPageObject, metadata_typedefs.METADATA_SPACE_APP)
+        return
+
     case kMetadataRoute_AppRefresh:
         refreshMetadata(httpResponseWriter, request, metadata_typedefs.METADATA_SPACE_APP)
         return
@@ -141,6 +150,10 @@ func showAdminMetadataPage(httpResponseWriter http.ResponseWriter, request *http
 
     case kMetadataRoute_SharedUpload:
         showMetadataUploadPage(httpResponseWriter, request, adminPageObject, metadata_typedefs.METADATA_SPACE_SHARED)
+        return
+
+    case kMetadataRoute_SharedUploadAll:
+        showMetadataUploadAllPage(httpResponseWriter, request, adminPageObject, metadata_typedefs.METADATA_SPACE_SHARED)
         return
 
     case kMetadataRoute_SharedRefresh:
@@ -573,7 +586,7 @@ func showMetadataUploadPage(httpResponseWriter http.ResponseWriter, request *htt
         simpleMessagePageObject := AdminSimpleMessageObject{
             AdminPageObject: adminPageObject,
             SimpleMessage: "Invalid version: " + err.Error(),
-            BackLinkHref: "/admin/metadata/" + space.String() + "/editVersion/" + version.String(),
+            BackLinkHref: "/admin/metadata/" + space.String(),
         }
 
         showSimpleMessagePage(httpResponseWriter, request, simpleMessagePageObject)
@@ -592,8 +605,7 @@ func showMetadataUploadPage(httpResponseWriter http.ResponseWriter, request *htt
         return
     }
 
-
-    err = request.ParseMultipartForm(32 << 20) // limit your max input length!
+    err = request.ParseMultipartForm(32 << 20)
     if err != nil {
         logger.LogError("error parsing request for uploading metadata item" +
                         "|metadata item key=" + metadataItemKey +
@@ -701,3 +713,202 @@ func showMetadataUploadPage(httpResponseWriter http.ResponseWriter, request *htt
     showSimpleMessagePage(httpResponseWriter, request, simpleMessagePageObject)
     return
 }
+
+func showMetadataUploadAllPage(httpResponseWriter http.ResponseWriter, request *http.Request, adminPageObject AdminPageObject, space metadata_typedefs.MetadataSpace) {
+
+    // Parse url for version
+    tokens := strings.Split(request.URL.Path, "/")
+    if len(tokens) < 2 {
+        logger.LogError("malformed request url in metadata upload all request" +
+                        "|request url=" + request.URL.Path)
+        httpResponseWriter.WriteHeader(http.StatusNotFound)
+        return
+    }
+    versionString := tokens[len(tokens) - 1]
+
+    version, err := core.GetAppVersionFromString(versionString)
+    if err != nil {
+        logger.LogError("error parsing editing version from url" +
+                        "|request url=" + request.URL.Path +
+                        "|error=" + err.Error())
+        httpResponseWriter.WriteHeader(http.StatusNotFound)
+        return
+    }
+
+    validVersion, err := metadata_service.Instance().IsVersionValid(version.String(), space)
+    if !validVersion {
+        simpleMessagePageObject := AdminSimpleMessageObject{
+            AdminPageObject: adminPageObject,
+            SimpleMessage: "Invalid version: " + err.Error(),
+            BackLinkHref: "/admin/metadata/" + space.String(),
+        }
+        simpleMessagePageObject.HasError = true
+        simpleMessagePageObject.ErrorString = "no such version"
+
+        showSimpleMessagePage(httpResponseWriter, request, simpleMessagePageObject)
+        return
+    }
+
+    metadataUpToDate := metadata_service.CheckIfMetadataUpToDate(space)
+    if !metadataUpToDate {
+        simpleMessagePageObject := AdminSimpleMessageObject{
+            AdminPageObject: adminPageObject,
+            SimpleMessage: "Metadata not up to date. Please hit Refresh and try again." + err.Error(),
+            BackLinkHref: "/admin/metadata/" + space.String() + "/editVersion/" + version.String(),
+        }
+        simpleMessagePageObject.HasError = true
+        simpleMessagePageObject.ErrorString = "metadata not up to date"
+
+        showSimpleMessagePage(httpResponseWriter, request, simpleMessagePageObject)
+        return
+    }
+
+    err = request.ParseMultipartForm(32 << 20)
+    if err != nil {
+        logger.LogError("error parsing request for uploading metadata items" +
+                        "|version=" + version.String() +
+                        "|error=" + err.Error())
+        httpResponseWriter.WriteHeader(http.StatusInternalServerError)
+        return
+    }
+
+    hasErrors := false
+    var errorList []string
+    var metadataItems []metadata_typedefs.IMetadataItem
+
+    uploadedFiles := request.MultipartForm.File["uploadedFiles"]
+    for _, fileHeader := range uploadedFiles {
+
+        metadataItemKey := strings.TrimSuffix(fileHeader.Filename, path.Ext(fileHeader.Filename))
+        if metadataItemKey == "" {
+            hasErrors = true
+            errorList = append(errorList, "error getting metadata item key from file name: " + fileHeader.Filename)
+            continue
+        }
+
+        file, err := fileHeader.Open()
+        if err != nil {
+            hasErrors = true
+            errorList = append(errorList, "error opening uploaded file: " + fileHeader.Filename)
+            continue
+        }
+
+        var buffer bytes.Buffer
+        _, err = io.Copy(&buffer, file)
+        if err != nil {
+            hasErrors = true
+            errorList = append(errorList, "error copying file contents from file: " + fileHeader.Filename +
+                                                  "(error=" + err.Error() + ")")
+            continue
+        }
+        fileContents := buffer.String()
+
+        metadataItem, err := metadata_factory.InstantiateMetadataItem(metadataItemKey)
+        if err != nil {
+            hasErrors = true
+            errorList = append(errorList, "error instantiating metadata item for key: " + metadataItemKey +
+                                                  "(error=" + err.Error() + ")")
+            continue
+        }
+
+        if space != metadataItem.GetMetadataSpace() {
+            hasErrors = true
+            errorList = append(errorList, "wrong metadata space for metadata item with key: " + metadataItemKey +
+                                                  "(expected=" + space.String() +
+                                                  ", actual=" + metadataItem.GetMetadataSpace().String() + ")")
+            continue
+        }
+
+        err = json.Unmarshal([]byte(fileContents), metadataItem)
+        if err != nil {
+            hasErrors = true
+            errorList = append(errorList, "error deserializing metadata item for key: " + metadataItemKey +
+                                                  "(error=" + err.Error() + ")")
+            continue
+        }
+
+        metadataItems = append(metadataItems, metadataItem)
+
+        _ = file.Close()
+    }
+
+    if hasErrors {
+        simpleMessagePageObject := AdminSimpleMessageObject{
+            AdminPageObject: adminPageObject,
+            SimpleMessage: "Something went wrong while preparing to upload metadata. ",
+            BackLinkHref: "/admin/metadata/" + space.String() + "/editVersion/" + version.String(),
+        }
+        simpleMessagePageObject.HasError = true
+        simpleMessagePageObject.ErrorString = ""
+        simpleMessagePageObject.MessageExtras = errorList
+
+        showSimpleMessagePage(httpResponseWriter, request, simpleMessagePageObject)
+        return
+    }
+
+    if len(metadataItems) == 0 {
+         simpleMessagePageObject := AdminSimpleMessageObject{
+            AdminPageObject: adminPageObject,
+            SimpleMessage: "Found no metadata to upload in request",
+            BackLinkHref: "/admin/metadata/" + space.String() + "/editVersion/" + version.String(),
+         }
+         simpleMessagePageObject.HasError = true
+         simpleMessagePageObject.ErrorString = "no metadata found"
+
+        showSimpleMessagePage(httpResponseWriter, request, simpleMessagePageObject)
+        return
+    }
+
+    var metadataItemKeys []string
+
+    defer metadata_service.ReleaseInstanceRW()
+    metadataServiceInstance := metadata_service.InstanceRW()
+    for _, metadataItem := range metadataItems {
+        err = metadataServiceInstance.SetMetadataItem(metadataItem, version)
+        if err != nil {
+            hasErrors = true
+            errorList = append(errorList, "error uploading metadata item for key: " + metadataItem.GetKey() +
+                                                  "(error=" + err.Error() + ")")
+            continue
+        }
+        metadataItemKeys = append(metadataItemKeys, metadataItem.GetKey())
+    }
+
+    err = metadata_service.MarkMetadataAsUpdated(space)
+    if err != nil {
+        hasErrors = true
+        errorList = append(errorList, "error marking metadata as updated: " +
+            "(error=" + err.Error() + ")")
+    }
+    metadata_service.RefreshLastUpdatedTimestamps()
+
+    if hasErrors {
+        simpleMessagePageObject := AdminSimpleMessageObject{
+            AdminPageObject: adminPageObject,
+            SimpleMessage: "Something went wrong while uploading metadata. ",
+            BackLinkHref: "/admin/metadata/" + space.String() + "/editVersion/" + version.String(),
+        }
+        simpleMessagePageObject.HasError = true
+        simpleMessagePageObject.ErrorString = "<br/>"
+        simpleMessagePageObject.MessageExtras = errorList
+
+        showSimpleMessagePage(httpResponseWriter, request, simpleMessagePageObject)
+        return
+    }
+
+    simpleMessagePageObject := AdminSimpleMessageObject{
+        AdminPageObject: adminPageObject,
+        SimpleMessage: "Successfully saved metadata for version: " + version.String() + ". Metadata items uploaded: ",
+        MessageExtras: metadataItemKeys,
+        BackLinkHref: "/admin/metadata/" + space.String() + "/editVersion/" + version.String(),
+    }
+
+    logger.LogInfo("Updated metadata items" +
+                   "|metadata space=" + space.String() +
+                   "|version=" + version.String() +
+                   "|metadata item keys=" + strings.Join(metadataItemKeys, ", "))
+
+    showSimpleMessagePage(httpResponseWriter, request, simpleMessagePageObject)
+    return
+}
+

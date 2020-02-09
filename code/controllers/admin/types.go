@@ -46,5 +46,6 @@ type AdminMetadataItem struct {
 type AdminSimpleMessageObject struct {
     AdminPageObject
     SimpleMessage string
+    MessageExtras []string
     BackLinkHref string
 }

@@ -11,10 +11,20 @@
                 <div class="container-fluid">
                     <h4 class="text-warning text-center">{{ .SimpleMessage }}</h4>
                     <h5 class="text-danger text-center">Error: {{ .ErrorString }}</h5>
+                    <div class="container-fluid text-danger text-center">
+                        {{ range $messageExtra := .MessageExtras }}
+                            {{ $messageExtra }}<br/>
+                        {{ end }}
+                    </div>
                 </div>
             {{ else }}
                 <div class="container-fluid">
                     <h4 class="text-light text-center">{{ .SimpleMessage }}</h4>
+                    <div class="container-fluid text-info text-center">
+                        {{ range $messageExtra := .MessageExtras }}
+                            {{ $messageExtra }}<br/>
+                        {{ end }}
+                    </div>
                 </div>
             {{ end }}
 
