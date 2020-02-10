@@ -303,6 +303,20 @@ func updateNewCurrentVersions(space metadata_typedefs.MetadataSpace, newCurrentV
 
 func showMetadataCreateNewVersionPage(httpResponseWriter http.ResponseWriter, request *http.Request, adminPageObject AdminPageObject, space metadata_typedefs.MetadataSpace) {
 
+    metadataUpToDate := metadata_service.CheckIfMetadataUpToDate(space)
+    if !metadataUpToDate {
+        simpleMessagePageObject := AdminSimpleMessageObject{
+            AdminPageObject: adminPageObject,
+            SimpleMessage: "Metadata not up to date. Please hit Refresh and try again.",
+            BackLinkHref: "/admin/metadata/" + space.String(),
+        }
+        simpleMessagePageObject.HasError = true
+        simpleMessagePageObject.ErrorString = "stale metadata"
+
+        showSimpleMessagePage(httpResponseWriter, request, simpleMessagePageObject)
+        return
+    }
+
     // Check post arguments
     err := request.ParseForm()
     if err != nil {
@@ -346,6 +360,20 @@ func showMetadataCreateNewVersionPage(httpResponseWriter http.ResponseWriter, re
         return
     }
 
+    err = metadata_service.MarkMetadataAsUpdated(space)
+    if err != nil {
+        simpleMessagePageObject := AdminSimpleMessageObject{
+            AdminPageObject: adminPageObject,
+            SimpleMessage: "Error marking metadata as updated",
+            BackLinkHref: "/admin/metadata/" + space.String(),
+        }
+        simpleMessagePageObject.HasError = true
+        simpleMessagePageObject.ErrorString = err.Error()
+
+        showSimpleMessagePage(httpResponseWriter, request, simpleMessagePageObject)
+        return
+    }
+    metadata_service.RefreshLastUpdatedTimestamps()
 
     simpleMessagePageObject := AdminSimpleMessageObject{
         AdminPageObject: adminPageObject,
