@@ -345,23 +345,28 @@ func showMetadataEditVersionPage(httpResponseWriter http.ResponseWriter, request
         return
     }
 
-    metadataItems, err := metadata_service.Instance().GetMetadataItemsInVersion(version.String(), space)
-    if err != nil {
-        simpleMessagePageObject := AdminSimpleMessageObject{
-            AdminPageObject: pageObject.AdminPageObject,
-            SimpleMessage: "Error finding metadata items: " + err.Error(),
-            BackLinkHref: "/admin/metadata/" + space.String(),
+    metadataFactories := metadata_factory.GetRegisteredFactories()
+    for _, metadataFactory := range metadataFactories {
+        metadataItem := metadataFactory.Instantiate()
+        metadataManifestItem, err := metadata_service.Instance().GetMetadataManifestItemInVersion(metadataItem.GetKey(), version, space)
+        if err != nil || metadataManifestItem == nil {
+            pageObject.Items = append(pageObject.Items, AdminMetadataItem{
+                Key:metadataItem.GetKey(),
+                Hash:"",
+                Defined:false,
+            })
+        } else {
+            pageObject.Items = append(pageObject.Items, AdminMetadataItem{
+                Key:metadataManifestItem.MetadataKey,
+                Hash:metadataManifestItem.Hash,
+                Defined:true,
+            })
         }
+    }
 
-        showSimpleMessagePage(httpResponseWriter, request, simpleMessagePageObject)
-        return
-    }
-    for _, metadataItem := range metadataItems {
-        pageObject.Items = append(pageObject.Items, AdminMetadataItem{
-                                                        Key:metadataItem.MetadataKey,
-                                                        Hash:metadataItem.Hash,
-                                                    })
-    }
+    sort.Slice(pageObject.Items, func(i, j int) bool {
+        return pageObject.Items[i].Key < pageObject.Items[j].Key
+    })
 
     templates, err := template.ParseGlob(config.GetTemplateFilesPath() + "/admin_tool/*")
     if err != nil {
@@ -484,7 +489,7 @@ func showMetadataDownloadAllPage(httpResponseWriter http.ResponseWriter, request
         return
     }
 
-    manifestItems, err := metadata_service.Instance().GetMetadataItemsInVersion(versionString, space)
+    manifestItems, err := metadata_service.Instance().GetMetadataManifestItemsInVersion(versionString, space)
     if len(manifestItems) == 0 {
         simpleMessagePageObject := AdminSimpleMessageObject{
             AdminPageObject: adminPageObject,

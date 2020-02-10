@@ -41,6 +41,7 @@ type MetadataInfo struct {
 type AdminMetadataItem struct {
     Key string
     Hash string
+    Defined bool
 }
 
 type AdminSimpleMessageObject struct {

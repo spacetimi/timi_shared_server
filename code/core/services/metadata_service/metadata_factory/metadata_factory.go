@@ -21,6 +21,15 @@ func RegisterFactory(metadataItemKey string, factory IMetadataFactory) {
     kMetadataFactories[metadataItemKey] = factory
 }
 
+func GetRegisteredFactories() []IMetadataFactory {
+    var factories []IMetadataFactory
+    for _, factory := range kMetadataFactories {
+        factories = append(factories, factory)
+    }
+
+    return factories
+}
+
 func InstantiateMetadataItem(metadataItemKey string) (metadata_typedefs.IMetadataItem, error) {
     factory, ok := kMetadataFactories[metadataItemKey]
     if !ok {

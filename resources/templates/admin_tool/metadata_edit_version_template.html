@@ -70,9 +70,12 @@
                                             <h5 class="text-primary">
                                                 {{ $metadataItem.Key }}
                                             </h5>
-                                            <small>Hash: {{ $metadataItem.Hash }}</small>
+                                            {{ if $metadataItem.Defined }}
+                                                <small>Hash: {{ $metadataItem.Hash }}</small>
+                                            {{ end }}
                                         </div>
                                         <div class="col-md-3">
+                                            {{ if $metadataItem.Defined }}
                                             <div class="btn-group" role="group" aria-label="View Download Buttons">
                                                 <a href="/admin/metadata/{{ $.Space }}/view/{{ $.Version }}/{{ $metadataItem.Key }}" target="_blank" class="btn btn-info border border-dark rounded-left">
                                                     View&nbsp;
@@ -83,6 +86,9 @@
                                                     <img src="/images/download_icon.png"></a>
                                                 </a>
                                             </div>
+                                            {{ else }}
+                                                <h6><img src="/images/warning_sign_light.png"> No metadata defined yet</h6>
+                                            {{ end}}
                                         </div>
                                         <div class="col-md-2">
                                             <div class="container-fluid">

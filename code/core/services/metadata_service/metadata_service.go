@@ -134,7 +134,7 @@ func (ms *MetadataService) IsVersionValid(versionString string, space metadata_t
 	return true, nil
 }
 
-func (ms *MetadataService) GetMetadataItemsInVersion(versionString string, space metadata_typedefs.MetadataSpace) ([]*metadata_typedefs.MetadataManifestItem, error) {
+func (ms *MetadataService) GetMetadataManifestItemsInVersion(versionString string, space metadata_typedefs.MetadataSpace) ([]*metadata_typedefs.MetadataManifestItem, error) {
 	msa := ms.getMetadataServiceSpace(space)
 
 	version, err := core.GetAppVersionFromString(versionString)
@@ -152,6 +152,26 @@ func (ms *MetadataService) GetMetadataItemsInVersion(versionString string, space
 	}
 
 	return manifest.MetadataManifestItems, nil
+}
+
+func (ms *MetadataService) GetMetadataManifestItemInVersion(metadataItemKey string, version *core.AppVersion, space metadata_typedefs.MetadataSpace) (*metadata_typedefs.MetadataManifestItem, error) {
+	msa := ms.getMetadataServiceSpace(space)
+
+	valid := msa.mdVersionList.IsVersionValid(version)
+	if !valid {
+		return nil, errors.New("no such version")
+	}
+
+	manifest, err := msa.getMetadataManifestForVersion(version)
+	if err != nil {
+		return nil, errors.New("error loading manifest: " + err.Error())
+	}
+
+	manifestItem := manifest.GetManifestItem(metadataItemKey)
+	if manifestItem == nil {
+		return nil, errors.New("error finding manifest item")
+	}
+	return manifestItem, nil
 }
 
 func (ms *MetadataService) IsMetadataHashUpToDate(key string, hash string, space metadata_typedefs.MetadataSpace, version *core.AppVersion) (bool, error) {
