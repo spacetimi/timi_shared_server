@@ -1,6 +1,9 @@
 package metadata_typedefs
 
-import "github.com/spacetimi/timi_shared_server/code/core"
+import (
+	"errors"
+	"github.com/spacetimi/timi_shared_server/code/core"
+)
 
 type MetadataVersionList struct {
 	Versions []string
@@ -16,11 +19,12 @@ func (mvl *MetadataVersionList) Initialize() {
 	}
 }
 
-func (mvl *MetadataVersionList)IsVersionValid(version *core.AppVersion) bool {
+func (mvl *MetadataVersionList) IsVersionValid(version *core.AppVersion) bool {
 	_, ok := mvl._versionsAsMap[version.String()]
 	return ok
 }
-func (mvl *MetadataVersionList)IsVersionCurrent(version *core.AppVersion) bool {
+
+func (mvl *MetadataVersionList) IsVersionCurrent(version *core.AppVersion) bool {
 	for _, currentVersion := range mvl.CurrentVersions {
 		if version.String() == currentVersion {
 			return true
@@ -29,3 +33,18 @@ func (mvl *MetadataVersionList)IsVersionCurrent(version *core.AppVersion) bool {
 	return false
 }
 
+func (mvl *MetadataVersionList) CreateNewVersion(version *core.AppVersion, markAsCurrent bool) error {
+    _, ok := mvl._versionsAsMap[version.String()]
+    if ok {
+    	return errors.New("duplicate version")
+	}
+
+	mvl.Versions = append(mvl.Versions, version.String())
+	mvl._versionsAsMap[version.String()] = true
+
+	if markAsCurrent {
+		mvl.CurrentVersions = append(mvl.CurrentVersions, version.String())
+	}
+
+	return nil
+}

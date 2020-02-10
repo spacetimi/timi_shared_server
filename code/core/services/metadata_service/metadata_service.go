@@ -113,6 +113,28 @@ func (ms *MetadataService) SetCurrentVersions(newCurrentVersionStrings []string,
     return nil
 }
 
+/**
+ * Only meant to be called from the admin tool / scripts
+ */
+func (ms *MetadataService) CreateNewVersion(newVersion *core.AppVersion, space metadata_typedefs.MetadataSpace, markAsCurrent bool) error {
+	validVersion, _ := ms.IsVersionValid(newVersion.String(), space)
+	if validVersion {
+		return errors.New("duplicate version. version already exists")
+	}
+
+	msa := ms.getMetadataServiceSpace(space)
+	err := msa.createNewVersion(newVersion, markAsCurrent)
+	if err != nil {
+		logger.LogWarning("error creating new metadata version" +
+						  "|metadata space=" + space.String() +
+						  "|new version=" + newVersion.String() +
+						  "|error=" + err.Error())
+		return err
+	}
+
+	return nil
+}
+
 func (ms *MetadataService) GetAllVersions(space metadata_typedefs.MetadataSpace) []string {
 	msa := ms.getMetadataServiceSpace(space)
 

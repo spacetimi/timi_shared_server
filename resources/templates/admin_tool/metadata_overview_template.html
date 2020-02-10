@@ -92,7 +92,48 @@
 
                     <div class="row bg-light border border-info rounded">
                         <div class="col-md-12 pt-2">
-                            <span class="badge badge-secondary">All Versions:</span>
+                            <div class="row pt-2 pb-2 pl-2 pr-4">
+                                <div class="col-md-8">
+                                    <span class="badge badge-secondary">All Versions:</span>
+                                </div>
+                                <div class="col-md-4">
+                                    <button type="button" class="btn btn-warning float-right" data-toggle="modal" data-target="#createNewVersionModal" data-whatever="@mdo">
+                                        <img src="/images/plus.png" style="margin-bottom: 4px">&nbsp;&nbsp;Create New Version
+                                    </button>
+                                </div>
+
+                                <div class="modal fade" id="createNewVersionModal" tabindex="-1" role="dialog" aria-labelledby="createNewVersionEditorTitle" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-dark text-light">
+                                                <h5 class="modal-title" id="createNewVersionEditorTitle">Create New Version</h5>
+                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                    <span aria-hidden="true" class="text-light">&times;</span>
+                                                </button>
+                                            </div>
+
+                                            <form method="post">
+                                                <div class="modal-body">
+                                                    <div class="form-group">
+                                                        <label for="newVersionNumberString" class="col-form-label">Version Number (MajorVersion.MinorVersion) :</label>
+                                                        <input type="text" name="newVersionNumberString" value="0.0" class="form-control" id="newVersionNumberString">
+                                                        <input class="form-group-input" type="checkbox" checked id="newVersionIsCurrent" name="newVersionIsCurrent" value="true">
+                                                        <label class="form-group-label">
+                                                            Mark As Current?
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" id="close_button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                                    <button type="submit" id="create_new_version_button" formaction="/admin/metadata/{{ .MetadataInfo.Space }}/createNewVersion" onclick="showLoadingSpinner('create_new_version_button')" class="btn btn-primary">Create</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                            </div>
                             <br/>
                             <br/>
                             <ul class="list-group">

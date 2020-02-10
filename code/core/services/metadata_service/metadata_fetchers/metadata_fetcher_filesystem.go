@@ -7,6 +7,8 @@ import (
 	"github.com/spacetimi/timi_shared_server/code/core/services/metadata_service/metadata_typedefs"
 	"github.com/spacetimi/timi_shared_server/utils/logger"
 	"io/ioutil"
+	"os"
+	"path"
 )
 
 type MetadataFetcherFilesystem struct { // Implements IMetadataFetcher
@@ -107,6 +109,14 @@ func (mf *MetadataFetcherFilesystem) SetMetadataManifestForVersion(manifest *met
 	}
 
 	filePath := mf.path + "/" + version + "/" + "MetadataManifest.json"
+	_, err = os.Stat(filePath)
+	if err != nil {
+	    err = os.MkdirAll(path.Dir(filePath), 0755)
+	    if err != nil {
+	    	return errors.New("error creating path: " + path.Dir(filePath))
+		}
+	}
+
 	err =  ioutil.WriteFile(filePath, []byte(manifestJson), 0644)
 	if err != nil {
 		return errors.New("error saving new manifest file|error=" + err.Error())

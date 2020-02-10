@@ -40,6 +40,8 @@ const kMetadataRoute_AppUploadAll = "METADATA_APP_UPLOAD_ALL"
 const kMetadataRoute_SharedUploadAll = "METADATA_SHARED_UPLOAD_ALL"
 const kMetadataRoute_AppRefresh = "METADATA_APP_REFRESH"
 const kMetadataRoute_SharedRefresh = "METADATA_SHARED_REFRESH"
+const kMetadataRoute_AppCreateNewVersion = "METADATA_APP_CREATE_NEW_VERSION"
+const kMetadataRoute_SharedCreateNewVersion = "METADATA_SHARED_CREATE_NEW_VERSION"
 
 var kAdminMetadataRoutes = map[string]string{
     "/admin/metadata$": kMetadataRoute_SelectSpace,
@@ -52,6 +54,7 @@ var kAdminMetadataRoutes = map[string]string{
     "/admin/metadata/app/upload/[0-9]+\\.[0-9]+/.*$": kMetadataRoute_AppUpload,
     "/admin/metadata/app/upload_all/[0-9]+\\.[0-9]+$": kMetadataRoute_AppUploadAll,
     "/admin/metadata/app/refresh$": kMetadataRoute_AppRefresh,
+    "/admin/metadata/app/createNewVersion$": kMetadataRoute_AppCreateNewVersion,
     "/admin/metadata/shared$": kMetadataRoute_SharedOverview,
     "/admin/metadata/shared/setCurrentVersions$": kMetadataRoute_SharedOverview,
     "/admin/metadata/shared/editVersion/[0-9]+\\.[0-9]+$": kMetadataRoute_SharedEditVersion,
@@ -61,6 +64,7 @@ var kAdminMetadataRoutes = map[string]string{
     "/admin/metadata/shared/upload/[0-9]+\\.[0-9]+/.*$": kMetadataRoute_SharedUpload,
     "/admin/metadata/shared/upload_all/[0-9]+\\.[0-9]+$": kMetadataRoute_SharedUploadAll,
     "/admin/metadata/shared/refresh$": kMetadataRoute_SharedRefresh,
+    "/admin/metadata/shared/createNewVersion$": kMetadataRoute_SharedCreateNewVersion,
 }
 
 var kAdminMetadataRouteRegexToRouteName map[*regexp.Regexp]string
@@ -128,6 +132,10 @@ func showAdminMetadataPage(httpResponseWriter http.ResponseWriter, request *http
         refreshMetadata(httpResponseWriter, request, metadata_typedefs.METADATA_SPACE_APP)
         return
 
+    case kMetadataRoute_AppCreateNewVersion:
+        showMetadataCreateNewVersionPage(httpResponseWriter, request, adminPageObject, metadata_typedefs.METADATA_SPACE_APP)
+        return
+
     case kMetadataRoute_SharedOverview:
         showMetadataOverviewPage(httpResponseWriter, request, adminPageObject, metadata_typedefs.METADATA_SPACE_SHARED)
         return
@@ -158,6 +166,10 @@ func showAdminMetadataPage(httpResponseWriter http.ResponseWriter, request *http
 
     case kMetadataRoute_SharedRefresh:
         refreshMetadata(httpResponseWriter, request, metadata_typedefs.METADATA_SPACE_SHARED)
+        return
+
+    case kMetadataRoute_SharedCreateNewVersion:
+        showMetadataCreateNewVersionPage(httpResponseWriter, request, adminPageObject, metadata_typedefs.METADATA_SPACE_SHARED)
         return
 
     default:
@@ -289,6 +301,62 @@ func updateNewCurrentVersions(space metadata_typedefs.MetadataSpace, newCurrentV
     return nil
 }
 
+func showMetadataCreateNewVersionPage(httpResponseWriter http.ResponseWriter, request *http.Request, adminPageObject AdminPageObject, space metadata_typedefs.MetadataSpace) {
+
+    // Check post arguments
+    err := request.ParseForm()
+    if err != nil {
+        logger.LogError("error parsing form for metadata request" +
+                        "|request url=" + request.URL.Path +
+                        "|error=" + err.Error())
+        httpResponseWriter.WriteHeader(http.StatusInternalServerError)
+        return
+    }
+
+    newVersionNumberString := request.Form.Get("newVersionNumberString")
+    newVersion, err := core.GetAppVersionFromString(newVersionNumberString)
+    if err != nil {
+        simpleMessagePageObject := AdminSimpleMessageObject{
+            AdminPageObject: adminPageObject,
+            SimpleMessage: "Error parsing new version number: " + newVersionNumberString,
+            BackLinkHref: "/admin/metadata/" + space.String(),
+        }
+        simpleMessagePageObject.HasError = true
+        simpleMessagePageObject.ErrorString = err.Error()
+
+        showSimpleMessagePage(httpResponseWriter, request, simpleMessagePageObject)
+        return
+    }
+
+    isCurrent := request.Form.Get("newVersionIsCurrent") == "true"
+
+    defer metadata_service.ReleaseInstanceRW()
+    err = metadata_service.InstanceRW().CreateNewVersion(newVersion, space, isCurrent)
+
+    if err != nil {
+        simpleMessagePageObject := AdminSimpleMessageObject{
+            AdminPageObject: adminPageObject,
+            SimpleMessage: "Error creating new version: " + newVersion.String(),
+            BackLinkHref: "/admin/metadata/" + space.String(),
+        }
+        simpleMessagePageObject.HasError = true
+        simpleMessagePageObject.ErrorString = err.Error()
+
+        showSimpleMessagePage(httpResponseWriter, request, simpleMessagePageObject)
+        return
+    }
+
+
+    simpleMessagePageObject := AdminSimpleMessageObject{
+        AdminPageObject: adminPageObject,
+        SimpleMessage: "Successfully created new version: " + newVersion.String(),
+        BackLinkHref: "/admin/metadata/" + space.String(),
+    }
+
+    showSimpleMessagePage(httpResponseWriter, request, simpleMessagePageObject)
+    return
+}
+
 func showMetadataEditVersionPage(httpResponseWriter http.ResponseWriter, request *http.Request, adminPageObject AdminPageObject, space metadata_typedefs.MetadataSpace) {
 
     pageObject := AdminEditMetadataPageObject{}
@@ -310,9 +378,11 @@ func showMetadataEditVersionPage(httpResponseWriter http.ResponseWriter, request
     if !validVersion {
         simpleMessagePageObject := AdminSimpleMessageObject{
             AdminPageObject: pageObject.AdminPageObject,
-            SimpleMessage: "Invalid version: " + err.Error(),
+            SimpleMessage: "Invalid version",
             BackLinkHref: "/admin/metadata/" + space.String(),
         }
+        simpleMessagePageObject.HasError = true
+        simpleMessagePageObject.ErrorString = err.Error()
 
         showSimpleMessagePage(httpResponseWriter, request, simpleMessagePageObject)
         return

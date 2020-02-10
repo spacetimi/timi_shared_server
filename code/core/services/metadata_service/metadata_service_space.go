@@ -17,6 +17,7 @@ type MetadataServiceSpace struct {
     mdVersionList *metadata_typedefs.MetadataVersionList
     mdFetcher metadata_typedefs.IMetadataFetcher
 
+    /* Cache of metadata for versions marked as current */
     mdCache map[string]*metadata_typedefs.MetadataCache			// version => MetadataCache for version
     mdManifests map[string]*metadata_typedefs.MetadataManifest 	// version => MetadataManifest for version
 }
@@ -46,6 +47,7 @@ func newMetadataServiceSpace(metadataSpace metadata_typedefs.MetadataSpace) *Met
         msa.mdManifests[version] = manifest
     }
 
+    // TODO: Avi: Rename current versions to cached versions
     // For versions marked as current in the version-list, load the metadata
     // and cache it in memory.
     // This will let us respond rapidly to metadata requests from current versions of the app
@@ -235,6 +237,38 @@ func (msa *MetadataServiceSpace) setCurrentVersions(newCurrentVersions []*core.A
     err := msa.mdFetcher.SetMetadataVersionList(msa.mdVersionList)
     if err != nil {
         return errors.New("could not save current metadata versions| error=" + err.Error())
+    }
+
+    return nil
+}
+
+/**
+ * Only meant to be called from the admin tool / scripts
+ */
+func (msa *MetadataServiceSpace) createNewVersion(version *core.AppVersion, markAsCurrent bool) error {
+    _, ok := msa.mdManifests[version.String()]
+    if ok {
+        return errors.New("duplicate version")
+    }
+
+    err := msa.mdVersionList.CreateNewVersion(version, markAsCurrent)
+    if err != nil {
+        return errors.New("error adding new version to metadata version list: " + err.Error())
+    }
+
+    err = msa.mdFetcher.SetMetadataVersionList(msa.mdVersionList)
+    if err != nil {
+        return errors.New("error saving updated metadata version list: " + err.Error())
+    }
+
+    // Create empty manifest for new version
+    newManifest := &metadata_typedefs.MetadataManifest{}
+    newManifest.Initialize()
+    msa.mdManifests[version.String()] = newManifest
+
+    err = msa.mdFetcher.SetMetadataManifestForVersion(newManifest, version.String())
+    if err != nil {
+        return errors.New("error creating metadata manifest for new version: " + err.Error())
     }
 
     return nil
