@@ -43,7 +43,7 @@ func processLoginRequest(request *http.Request) LoginResponse {
 	// TODO: krisa: Use Appversion in GetMetaDataItem()
 	// and also insert AppVersion and/or LoginRequest into the context from this point downward?
 
-	mdUpToDate, err := metadata_service.Instance().IsMetadataHashUpToDate("MetadataTest", "asdfghjkl", metadata_typedefs.METADATA_SPACE_APP, loginRequest.AppVersion)
+	mdUpToDate, err := metadata_service.Instance().IsMetadataHashUpToDate("MetadataTest", "f5499079646c8e6a3fded46d2903516d", metadata_typedefs.METADATA_SPACE_APP, loginRequest.AppVersion)
 	if err != nil {
 		logger.LogError("failed to find if metadata up to date|error=" + err.Error())
 	}

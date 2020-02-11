@@ -23,7 +23,7 @@ type AdminLoginResponse struct {
     expirationTime time.Time
 }
 
-type JWTClaims struct {
+type AdminUserJWTClaims struct {
     Username string `json:"username"`
     IsAdminUser bool
     jwt.StandardClaims
@@ -45,7 +45,7 @@ func tryLoginWithAdminCredentials(request *AdminLoginRequest) (*AdminLoginRespon
 
     expiration := time.Now().Add(sessionExpirationTimeHours * time.Hour)
 
-    claims := &JWTClaims{
+    claims := &AdminUserJWTClaims{
         Username: request.username,
         IsAdminUser: true,
         StandardClaims: jwt.StandardClaims{
@@ -71,7 +71,7 @@ func tryLoginWithAdminCredentials(request *AdminLoginRequest) (*AdminLoginRespon
 }
 
 func checkAdminLoginClaim(jwtTokenString string) (bool, string, error) {
-    claims := &JWTClaims{}
+    claims := &AdminUserJWTClaims{}
 
     token, err := jwt.ParseWithClaims(jwtTokenString, claims, func(token *jwt.Token) (interface{}, error) {
         return kJWT_SECRET_KEY, nil
