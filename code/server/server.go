@@ -14,7 +14,8 @@ import (
 
 // TODO: Avi: Remove these controllers
 func StartServer(testingController func(w http.ResponseWriter, response *http.Request),
-                 dummyController func(w http.ResponseWriter, response *http.Request)) {
+                 dummyController func(w http.ResponseWriter, response *http.Request),
+                 storageTestController func(w http.ResponseWriter, response *http.Request)) {
 
     router := mux.NewRouter()
 
@@ -34,6 +35,11 @@ func StartServer(testingController func(w http.ResponseWriter, response *http.Re
     router.HandleFunc("/dummy/{param1}", dummyController).Methods("GET", "POST")
     router.HandleFunc("/testing/{param1}/{param2}", testingController).Methods("GET", "POST")
     router.HandleFunc("/testing/{param1}/{param2}/{param3}", testingController).Methods("GET", "POST")
+
+    router.HandleFunc("/storage", storageTestController).Methods("GET", "POST")
+    router.HandleFunc("/storage/{param1}", storageTestController).Methods("GET", "POST")
+    router.HandleFunc("/storage/{param1}/{param2}", storageTestController).Methods("GET", "POST")
+    router.HandleFunc("/storage/{param1}/{param2}/{param3}", storageTestController).Methods("GET", "POST")
 
     // Admin server
     router.HandleFunc("/admin", admin.AdminController).Methods("GET", "POST")
