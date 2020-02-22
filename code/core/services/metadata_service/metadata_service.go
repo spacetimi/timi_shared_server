@@ -91,7 +91,7 @@ func (ms *MetadataService) SetCurrentVersions(newCurrentVersionStrings []string,
 							"|metadata space=" + space.String() +
 	    					"|version string=" + versionString +
 	    					"|error=" + err.Error())
-	    	continue
+	    	return errors.New("error parsing versions: " + err.Error())
 		}
 		newCurrentVersions = append(newCurrentVersions, version)
 	}
