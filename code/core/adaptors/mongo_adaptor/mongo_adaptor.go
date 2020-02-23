@@ -1,15 +1,14 @@
 package mongo_adaptor
 
 import (
-    "context"
-    "errors"
+	"context"
+	"errors"
 	"fmt"
 	"github.com/spacetimi/timi_shared_server/utils/logger"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-    "go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"reflect"
-	"strings"
 )
 
 /** Package init **/
@@ -174,7 +173,7 @@ func insertOnDuplicateUpdateDataItem(dbSpace DBSpace,
 	    return errors.New("error finding collection: " + err.Error())
 	}
 
-	bsonMRepresentation, err := marshalPtrToBson(dataItemPtr)
+	bsonMRepresentation, err := marshalStructPtrToBson(dataItemPtr)
 	if err != nil {
 		return errors.New("error serializing data item: " + err.Error())
 	}
@@ -205,7 +204,7 @@ func insertOnDuplicateUpdateDataItem(dbSpace DBSpace,
     return nil
 }
 
-func marshalPtrToBson(s interface{}) (bson.M, error) {
+func marshalStructPtrToBson(s interface{}) (bson.M, error) {
 	bsonMRepresentation := make(map[string]interface{})
 
 	p := reflect.ValueOf(s)
@@ -222,7 +221,7 @@ func marshalPtrToBson(s interface{}) (bson.M, error) {
 	for i := 0; i < numFields; i++ {
 		value := v.Field(i)
 		if value.CanInterface() {
-			bsonMRepresentation[strings.ToLower(v.Type().Field(i).Name)] = value.Interface()
+			bsonMRepresentation[v.Type().Field(i).Name] = value.Interface()
 		}
 	}
 
