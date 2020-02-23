@@ -10,6 +10,7 @@ type IBlob interface {
     GetStorageSpace() StorageSpace
     GetBlobName() string
     GetPrimaryKeys() []string
+    IsRedisAllowed() bool
 }
 
 /***** Concrete Types ***********************************************************/
@@ -18,13 +19,15 @@ type BlobDescriptor struct {        // Implements IBlob
     space          StorageSpace
     blobName       string
     primaryKeys    []string
+    isRedisAllowed bool
 }
 
-func NewBlobDescriptor(space StorageSpace, blobName string, primaryKeys []string) BlobDescriptor {
+func NewBlobDescriptor(space StorageSpace, blobName string, primaryKeys []string, isRedisAllowed bool) BlobDescriptor {
     bd := BlobDescriptor{
         space:space,
         blobName:blobName,
         primaryKeys:primaryKeys,
+        isRedisAllowed:isRedisAllowed,
     }
     return bd
 }
@@ -39,4 +42,8 @@ func (bd *BlobDescriptor) GetBlobName() string {
 
 func (bd *BlobDescriptor) GetPrimaryKeys() []string {
     return bd.primaryKeys
+}
+
+func (bd *BlobDescriptor) IsRedisAllowed() bool {
+    return bd.isRedisAllowed
 }

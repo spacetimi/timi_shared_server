@@ -25,19 +25,22 @@ func GetBlobByPrimaryKeys(outBlobPtr storage_typedefs.IBlob,
     }
 
     // Check in redis first
-    redisKey := getRedisKey(outBlobPtr.GetBlobName(), primaryKeyValues)
-    redisValue, redisOk := redis_adaptor.Read(redisKey)
-    if redisOk {
-        err := json.Unmarshal([]byte(redisValue), outBlobPtr)
-        if err == nil {
-            // Successfully read the blob from redis
-            return nil
+    var redisKey string
+    if outBlobPtr.IsRedisAllowed() {
+        redisKey = getRedisKey(outBlobPtr.GetBlobName(), primaryKeyValues)
+        redisValue, redisOk := redis_adaptor.Read(redisKey)
+        if redisOk {
+            err := json.Unmarshal([]byte(redisValue), outBlobPtr)
+            if err == nil {
+                // Successfully read the blob from redis
+                return nil
+            }
+            logger.LogError("error deserializing blob from redis" +
+                            "|blob name=" + outBlobPtr.GetBlobName() +
+                            "|primary key values=" + fmt.Sprintf("%#v", primaryKeyValues) +
+                            "|error=" + err.Error())
+            // Fall-through
         }
-        logger.LogError("error deserializing blob from redis" +
-                        "|blob name=" + outBlobPtr.GetBlobName() +
-                        "|primary key values=" + fmt.Sprintf("%#v", primaryKeyValues) +
-                        "|error=" + err.Error())
-        // Fall-through
     }
 
     // Read the blob from DB
@@ -55,13 +58,15 @@ func GetBlobByPrimaryKeys(outBlobPtr storage_typedefs.IBlob,
     }
 
     // Write the blob to redis for faster reads next time
-    err = writeBlobToRedis(redisKey, outBlobPtr)
-    if err != nil {
-        logger.LogError("error saving blob to redis" +
-                        "|blob name=" + outBlobPtr.GetBlobName() +
-                        "|primary key values=" + fmt.Sprintf("%#v", primaryKeyValues) +
-                        "|error=" + err.Error())
-        // Fall-through
+    if outBlobPtr.IsRedisAllowed() {
+        err = writeBlobToRedis(redisKey, outBlobPtr)
+        if err != nil {
+            logger.LogError("error saving blob to redis" +
+                            "|blob name=" + outBlobPtr.GetBlobName() +
+                            "|primary key values=" + fmt.Sprintf("%#v", primaryKeyValues) +
+                            "|error=" + err.Error())
+            // Fall-through
+        }
     }
 
     return nil
@@ -87,21 +92,23 @@ func SetBlob(blobPtr storage_typedefs.IBlob, ctx context.Context) error {
     }
 
     // Also write the blob to redis
-    primaryKeyValues, err := getPrimaryKeyValuesFromBlob(blobPtr)
-    if err != nil {
-        logger.LogError("error getting primary key values while trying to save blob to redis" +
-                        "|blob name=" + blobPtr.GetBlobName() +
-                        "|error=" + err.Error())
-        // Fall-through
-    } else {
-        redisKey := getRedisKey(blobPtr.GetBlobName(), primaryKeyValues)
-        err = writeBlobToRedis(redisKey, blobPtr)
+    if blobPtr.IsRedisAllowed() {
+        primaryKeyValues, err := getPrimaryKeyValuesFromBlob(blobPtr)
         if err != nil {
-            logger.LogError("error saving blob to redis" +
+            logger.LogError("error getting primary key values while trying to save blob to redis" +
                             "|blob name=" + blobPtr.GetBlobName() +
-                            "|primary key values=" + fmt.Sprintf("%#v", primaryKeyValues) +
                             "|error=" + err.Error())
             // Fall-through
+        } else {
+            redisKey := getRedisKey(blobPtr.GetBlobName(), primaryKeyValues)
+            err = writeBlobToRedis(redisKey, blobPtr)
+            if err != nil {
+                logger.LogError("error saving blob to redis" +
+                                "|blob name=" + blobPtr.GetBlobName() +
+                                "|primary key values=" + fmt.Sprintf("%#v", primaryKeyValues) +
+                                "|error=" + err.Error())
+                // Fall-through
+            }
         }
     }
 
