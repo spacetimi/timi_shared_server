@@ -65,8 +65,14 @@ func CheckIfMetadataUpToDate(space metadata_typedefs.MetadataSpace) bool {
 
     metadataEditedTimestampString, ok := redis_adaptor.Read(key)
     if !ok {
-        // No last updated timestamp. We must be up to date
-        return true
+        // No last updated timestamp. Create the timestamp as now, and Force refresh to be safe
+        err := MarkMetadataAsUpdated(space)
+        if err != nil {
+            logger.LogError("error trying to force mark metadata as updated" +
+                            "|space=" + space.String() +
+                            "|error=" + err.Error())
+        }
+        return false
     }
 
     metadataEditedTimestamp, err := strconv.ParseInt(metadataEditedTimestampString, 10, 64)
@@ -89,12 +95,17 @@ func startAutoUpdater(space metadata_typedefs.MetadataSpace) {
     RefreshLastUpdatedTimestamps()
 
     ticker := time.NewTicker(time.Second * time.Duration(config.GetEnvironmentConfiguration().MetadataAutoUpdaterPollSeconds))
+    checkAndAutoUpdateMetadata(space)
     for range ticker.C {
-        if !CheckIfMetadataUpToDate(space) {
-            logger.LogInfo("refresh triggered to re-fetch stale metadata" +
-                           "|space=" + space.String())
-            RefreshMetadata()
-        }
+        checkAndAutoUpdateMetadata(space)
+    }
+}
+
+func checkAndAutoUpdateMetadata(space metadata_typedefs.MetadataSpace) {
+    if !CheckIfMetadataUpToDate(space) {
+        logger.LogInfo("refresh triggered to re-fetch stale metadata" +
+                       "|space=" + space.String())
+        RefreshMetadata()
     }
 }
 
