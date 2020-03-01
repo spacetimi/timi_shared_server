@@ -5,15 +5,16 @@ import (
 	"errors"
 	"fmt"
 	"github.com/spacetimi/timi_shared_server/utils/logger"
+	"github.com/spacetimi/timi_shared_server/utils/reflection_utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"reflect"
 )
 
 /** Package init **/
 func init() {
     kTrueConst = true
+    kAtomicIncrementReturnDocumentOption = options.After
 }
 
 func Initialize(sharedMongoURL string, sharedDBName string,
@@ -125,6 +126,44 @@ func WriteDataItemByPrimaryKeys(dbSpace DBSpace,
 	return nil
 }
 
+func AtomicIncrement(dbSpace DBSpace,
+					 collectionName string,
+					 documentPrimaryKey string,
+					 documentPrimaryKeyValue interface{},
+					 fieldName string,
+					 delta interface{},
+					 ctx context.Context) (interface{}, error) {
+
+	collection, err := getMongoCollection(dbSpace, collectionName)
+	if err != nil {
+		return nil, errors.New("error finding collection: " + err.Error())
+	}
+
+	filter := bson.M { documentPrimaryKey: documentPrimaryKeyValue }
+	update := bson.M { "$inc": bson.M { fieldName: delta } }
+
+	result := collection.FindOneAndUpdate(ctx, filter, update,
+										  &options.FindOneAndUpdateOptions{Upsert:&kTrueConst,
+																 		   ReturnDocument:&kAtomicIncrementReturnDocumentOption})
+
+	if result.Err() != nil {
+		return nil, errors.New("error performing FindOneAndUpdate: " + result.Err().Error())
+	}
+
+	returnedDocument := bson.M{}
+	err = result.Decode(&returnedDocument)
+	if err != nil {
+		return nil, errors.New("error decoding returned document: " + err.Error())
+	}
+
+	newFieldValue, ok := returnedDocument[fieldName]
+	if !ok {
+		return nil, errors.New("failed to find field name in updated document")
+	}
+
+	return newFieldValue, nil
+}
+
 // TODO: Use contexts correctly. Don't just use context.Background
 
 
@@ -136,6 +175,7 @@ var _appMongoClient    *mongo.Client
 var _appDBName         string
 
 var kTrueConst bool
+var kAtomicIncrementReturnDocumentOption options.ReturnDocument
 
 func createMongoClient(mongoURL string) *mongo.Client {
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(mongoURL))
@@ -173,7 +213,7 @@ func insertOnDuplicateUpdateDataItem(dbSpace DBSpace,
 	    return errors.New("error finding collection: " + err.Error())
 	}
 
-	bsonMRepresentation, err := marshalStructPtrToBson(dataItemPtr)
+	bsonMRepresentation, err := reflection_utils.MarshalStructPtrToBson(dataItemPtr)
 	if err != nil {
 		return errors.New("error serializing data item: " + err.Error())
 	}
@@ -204,26 +244,4 @@ func insertOnDuplicateUpdateDataItem(dbSpace DBSpace,
     return nil
 }
 
-func marshalStructPtrToBson(s interface{}) (bson.M, error) {
-	bsonMRepresentation := make(map[string]interface{})
 
-	p := reflect.ValueOf(s)
-	if p.Kind() != reflect.Ptr {
-		return nil, errors.New("not a struct ptr")
-	}
-
-	v := reflect.Indirect(p)
-	if v.Kind() != reflect.Struct {
-		return nil, errors.New("not a struct")
-	}
-
-	numFields := v.NumField()
-	for i := 0; i < numFields; i++ {
-		value := v.Field(i)
-		if value.CanInterface() {
-			bsonMRepresentation[v.Type().Field(i).Name] = value.Interface()
-		}
-	}
-
-	return bsonMRepresentation, nil
-}

@@ -12,6 +12,10 @@ import (
 )
 
 /**
+ * TODO: Delete mongo_wrapper
+ */
+
+/**
  * TODO: Modify all the functions to return err when appropriate
  */
 

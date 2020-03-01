@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/spacetimi/timi_shared_server/code/config"
+	"github.com/spacetimi/timi_shared_server/code/core/services/identity_service"
 	"github.com/spacetimi/timi_shared_server/code/core/services/metadata_service"
 	"github.com/spacetimi/timi_shared_server/code/core/services/metadata_service/metadata_typedefs"
 	"github.com/spacetimi/timi_shared_server/utils/logger"
@@ -19,7 +20,14 @@ func HandleLogin(httpResponseWriter http.ResponseWriter, request *http.Request) 
 }
 
 func processLoginRequest(request *http.Request) LoginResponse {
-	err := request.ParseForm()
+	newUserId, err := identity_service.CreateNewUserID()
+	if err != nil {
+		logger.LogError("error creating new user id: " + err.Error())
+	} else {
+		logger.VarDumpInfo("new user id", newUserId)
+	}
+
+	err = request.ParseForm()
 	if err != nil {
 		return LoginResponse{Success:false, ErrorMessage:"Badly formed login request: " + err.Error()}
 	}

@@ -5,6 +5,7 @@ import (
 	"github.com/spacetimi/timi_shared_server/code/core/adaptors/mongo_adaptor"
 	"github.com/spacetimi/timi_shared_server/code/core/adaptors/mongo_wrapper"
 	"github.com/spacetimi/timi_shared_server/code/core/adaptors/redis_adaptor"
+	"github.com/spacetimi/timi_shared_server/code/core/services/identity_service"
 	"github.com/spacetimi/timi_shared_server/code/core/services/metadata_service"
 	"github.com/spacetimi/timi_shared_server/code/core/services/metadata_service/metadata_factory"
 )
@@ -24,6 +25,8 @@ func SharedInit(appInitializer IAppInitializer) {
 
 	metadata_service.Initialize()
 	metadata_factory.Initialize()
+
+	identity_service.Initialize()
 
 	registerMetadataFactories()
 

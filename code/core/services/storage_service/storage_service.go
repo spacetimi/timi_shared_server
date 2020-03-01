@@ -9,6 +9,7 @@ import (
     "github.com/spacetimi/timi_shared_server/code/core/adaptors/redis_adaptor"
     "github.com/spacetimi/timi_shared_server/code/core/services/storage_service/storage_typedefs"
     "github.com/spacetimi/timi_shared_server/utils/logger"
+    "github.com/spacetimi/timi_shared_server/utils/reflection_utils"
     "reflect"
 )
 
@@ -19,7 +20,7 @@ func GetBlobByPrimaryKeys(outBlobPtr storage_typedefs.IBlob,
         return errors.New("blob ptr is nil")
     }
 
-    primaryKeyValues, err := getPrimaryKeyValuesFromBlob(outBlobPtr)
+    primaryKeyValues, err := reflection_utils.GetFieldValuesFromStructPtr(outBlobPtr, outBlobPtr.GetPrimaryKeys())
     if err != nil {
         return errors.New("error getting primary key values from blob: " + err.Error())
     }
@@ -93,7 +94,7 @@ func SetBlob(blobPtr storage_typedefs.IBlob, ctx context.Context) error {
 
     // Also write the blob to redis
     if blobPtr.IsRedisAllowed() {
-        primaryKeyValues, err := getPrimaryKeyValuesFromBlob(blobPtr)
+        primaryKeyValues, err := reflection_utils.GetFieldValuesFromStructPtr(blobPtr, blobPtr.GetPrimaryKeys())
         if err != nil {
             logger.LogError("error getting primary key values while trying to save blob to redis" +
                             "|blob name=" + blobPtr.GetBlobName() +
@@ -164,29 +165,3 @@ func writeBlobToRedis(redisKey string, blobPtr storage_typedefs.IBlob) error {
     return nil
 }
 
-func getPrimaryKeyValuesFromBlob(blobPtr storage_typedefs.IBlob) ([]interface{}, error) {
-    var primaryKeyValues []interface{}
-    primaryKeys := blobPtr.GetPrimaryKeys()
-
-
-    p := reflect.ValueOf(blobPtr)
-    if p.Kind() != reflect.Ptr {
-        return nil, errors.New("not a struct ptr")
-    }
-
-    v := reflect.Indirect(p)
-    if v.Kind() != reflect.Struct {
-        return nil, errors.New("not a struct")
-    }
-
-    for _, primaryKey := range primaryKeys {
-        value := v.FieldByName(primaryKey)
-        if value.CanInterface() {
-            primaryKeyValues = append(primaryKeyValues, value.Interface())
-        } else {
-            return nil, errors.New("inaccessible primary key field: " + primaryKey)
-        }
-    }
-
-    return primaryKeyValues, nil
-}
