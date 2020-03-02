@@ -50,7 +50,7 @@ func main() {
     /** Validate parameters or die **/
     if len(*appPtr) == 0 ||
        len(*envPtr) == 0 ||
-       (appName != "bonda") ||
+       (appName != "bonda" && appName != "passman") ||
        len(appDir) == 0 ||
        (appEnv != "Local" && appEnv != "Test" && appEnv != "Staging" && appEnv != "Production"){
 
