@@ -9,6 +9,7 @@ import (
     "github.com/spacetimi/timi_shared_server/code/controllers/login"
     "log"
     "net/http"
+    "strconv"
 )
 
 
@@ -55,7 +56,8 @@ func StartServer(testingController func(w http.ResponseWriter, response *http.Re
         Handler(http.StripPrefix("/images/", http.FileServer(http.Dir(config.GetImageFilesPath()))))
 
 
-    fmt.Println("Server Started on port 8000")
-    log.Fatal(http.ListenAndServe(":8000", router))
+    portNumberString := strconv.Itoa(config.GetEnvironmentConfiguration().Port)
+    fmt.Println("Server Started on port " + portNumberString)
+    log.Fatal(http.ListenAndServe(":" + portNumberString, router))
 }
 
