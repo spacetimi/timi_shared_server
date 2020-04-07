@@ -4,14 +4,11 @@ import (
 	"errors"
 	"github.com/go-redis/redis"
 	"github.com/spacetimi/timi_shared_server/code/config"
-	"github.com/spacetimi/timi_shared_server/utils/logger"
 )
 
 var Client *redis.Client
 
 func Initialize() {
-	logger.LogInfo("Trying to connect to redis|redis url=" + config.GetEnvironmentConfiguration().SharedRedisURL)
-
 	Client = redis.NewClient(&redis.Options {
 		Addr:     config.GetEnvironmentConfiguration().SharedRedisURL,
 		Password: config.GetEnvironmentConfiguration().SharedRedisPasswd,
