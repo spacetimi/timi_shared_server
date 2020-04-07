@@ -1,63 +1,67 @@
 package server
 
 import (
-    "fmt"
     "github.com/gorilla/mux"
     "github.com/spacetimi/timi_shared_server/code/config"
-    "github.com/spacetimi/timi_shared_server/code/controllers"
     "github.com/spacetimi/timi_shared_server/code/controllers/admin"
     "github.com/spacetimi/timi_shared_server/code/controllers/login"
+    "github.com/spacetimi/timi_shared_server/code/controllers/server_status"
+    "github.com/spacetimi/timi_shared_server/code/core/controller"
+    "github.com/spacetimi/timi_shared_server/utils/logger"
     "log"
     "net/http"
     "strconv"
 )
 
+var _router *mux.Router
 
-// TODO: Avi: Remove these controllers
-func StartServer(testingController func(w http.ResponseWriter, response *http.Request),
-                 dummyController func(w http.ResponseWriter, response *http.Request),
-                 storageTestController func(w http.ResponseWriter, response *http.Request)) {
+/** Package init **/
+func init() {
+    _router = mux.NewRouter()
+}
 
-    router := mux.NewRouter()
+func StartServer(appController controller.IAppController) {
 
-    router.HandleFunc("/login", login.HandleLogin).Methods("POST")
+    if appController == nil {
+        logger.LogFatal("no app controller specified")
+        return
+    }
 
-    router.HandleFunc("/", controllers.TestController).Methods("GET", "POST")
-    router.HandleFunc("/test", controllers.TestController).Methods("GET", "POST")
-    router.HandleFunc("/redis-ping", controllers.PingRedisController).Methods("GET", "POST")
-    router.HandleFunc("/tools", controllers.ToolsController).Methods("GET", "POST")
-    router.HandleFunc("/fatal", controllers.FatalController).Methods("GET", "POST")
-    router.HandleFunc("/panic", controllers.PanicController).Methods("GET", "POST")
-
-    router.HandleFunc("/testing/{param1}", testingController).Methods("GET", "POST")
-    router.HandleFunc("/testing/{param1}/{param2}", testingController).Methods("GET", "POST")
-    router.HandleFunc("/testing/{param1}/{param2}/{param3}", testingController).Methods("GET", "POST")
-
-    router.HandleFunc("/dummy/{param1}", dummyController).Methods("GET", "POST")
-    router.HandleFunc("/testing/{param1}/{param2}", testingController).Methods("GET", "POST")
-    router.HandleFunc("/testing/{param1}/{param2}/{param3}", testingController).Methods("GET", "POST")
-
-    router.HandleFunc("/storage", storageTestController).Methods("GET", "POST")
-    router.HandleFunc("/storage/{param1}", storageTestController).Methods("GET", "POST")
-    router.HandleFunc("/storage/{param1}/{param2}", storageTestController).Methods("GET", "POST")
-    router.HandleFunc("/storage/{param1}/{param2}/{param3}", storageTestController).Methods("GET", "POST")
+    registerController(appController)
+    registerController(&server_status.ServerStatusController{})
+    registerController(&login.LoginController{})
 
     // Admin server
-    router.HandleFunc("/admin", admin.AdminController).Methods("GET", "POST")
-    router.HandleFunc("/admin/", admin.AdminController).Methods("GET", "POST")
-    router.HandleFunc("/admin/{param1}", admin.AdminController).Methods("GET", "POST")
-    router.HandleFunc("/admin/{param1}/{param2}", admin.AdminController).Methods("GET", "POST")
-    router.HandleFunc("/admin/{param1}/{param2}/{param3}", admin.AdminController).Methods("GET", "POST")
-    router.HandleFunc("/admin/{param1}/{param2}/{param3}/{param4}", admin.AdminController).Methods("GET", "POST")
-    router.HandleFunc("/admin/{param1}/{param2}/{param3}/{param4}/{param5}", admin.AdminController).Methods("GET", "POST")
+    _router.PathPrefix("/admin").HandlerFunc(admin.AdminController).Methods("GET", "POST")
 
     // Set up static file-server for images
-    router.PathPrefix("/images/").
-        Handler(http.StripPrefix("/images/", http.FileServer(http.Dir(config.GetImageFilesPath()))))
+    _router.PathPrefix("/images/").
+        Handler(http.StripPrefix("/images/", http.FileServer(http.Dir(config.GetSharedImageFilesPath()))))
+    _router.PathPrefix("/app-images/").
+        Handler(http.StripPrefix("/app-images/", http.FileServer(http.Dir(config.GetAppImageFilesPath()))))
 
 
     portNumberString := strconv.Itoa(config.GetEnvironmentConfiguration().Port)
-    fmt.Println("Server Started on port " + portNumberString)
-    log.Fatal(http.ListenAndServe(":" + portNumberString, router))
+    logger.LogInfo("Server started successfully|port=" + portNumberString)
+    log.Fatal(http.ListenAndServe(":" + portNumberString, _router))
+}
+
+func registerController(c controller.IAppController) {
+    for _, routeHandler := range c.RouteHandlers() {
+        routeHandler := routeHandler
+        for _, route := range routeHandler.Routes() {
+            methods := route.GetMethodsAsStrings()
+            _router.HandleFunc(route.Path, func(httpResponseWriter http.ResponseWriter, request *http.Request) {
+
+                requestPathVars := mux.Vars(request)
+
+                args := &controller.HandlerFuncArgs {
+                   RequestPathVars:requestPathVars,
+                }
+
+                routeHandler.HandlerFunc(httpResponseWriter, request, args)
+            }).Methods(methods...)
+        }
+    }
 }
 

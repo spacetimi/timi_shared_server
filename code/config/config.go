@@ -60,8 +60,12 @@ func GetTemplateFilesPath() string {
 	return go_vars_helper.GOPATH + "/src/github.com/spacetimi/timi_shared_server/resources/templates"
 }
 
-func GetImageFilesPath() string {
+func GetSharedImageFilesPath() string {
 	return go_vars_helper.GOPATH + "/src/github.com/spacetimi/timi_shared_server/resources/images"
+}
+
+func GetAppImageFilesPath() string {
+	return GetAppDirPath() + "/resources/images"
 }
 
 func GetSharedMetadataFilesPath() string {
