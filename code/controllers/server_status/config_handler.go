@@ -20,6 +20,13 @@ func (ch *ConfigHandler) Routes() []controller.Route {
 
 func (ch *ConfigHandler) HandlerFunc(httpResponseWriter http.ResponseWriter, request *http.Request, args *controller.HandlerFuncArgs) {
 
+    if config.GetEnvironmentConfiguration().AppEnvironment == config.PRODUCTION {
+        // TODO: Figure out how to enable this on production and just rpevent access to this endpoint if its out of vpn
+        _, _ = fmt.Fprintln(httpResponseWriter, "not on production")
+        return
+    }
+
+
     _, _ = fmt.Fprintln(httpResponseWriter, "AppName: " + config.GetAppName())
     _, _ = fmt.Fprintln(httpResponseWriter, "Port: " + strconv.Itoa(config.GetEnvironmentConfiguration().Port))
 
