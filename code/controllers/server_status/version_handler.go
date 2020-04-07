@@ -2,6 +2,7 @@ package server_status
 
 import (
     "fmt"
+    "github.com/spacetimi/timi_shared_server/code/controllers/shared_routes"
     "github.com/spacetimi/timi_shared_server/code/core/controller"
     "net/http"
 )
@@ -11,7 +12,7 @@ type VersionHandler struct {     // Implements IRouteHandler
 
 func (vh *VersionHandler) Routes() []controller.Route {
     return []controller.Route {
-        controller.NewRoute("/version", []controller.RequestMethodType{controller.GET, controller.POST}),
+        controller.NewRoute(shared_routes.Version, []controller.RequestMethodType{controller.GET, controller.POST}),
     }
 }
 

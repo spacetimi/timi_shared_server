@@ -3,6 +3,7 @@ package server_status
 import (
     "errors"
     "fmt"
+    "github.com/spacetimi/timi_shared_server/code/controllers/shared_routes"
     "github.com/spacetimi/timi_shared_server/code/core/adaptors/redis_adaptor"
     "github.com/spacetimi/timi_shared_server/code/core/controller"
     "net/http"
@@ -13,7 +14,7 @@ type HealthCheckHandler struct {     // Implements IRouteHandler
 
 func (hch *HealthCheckHandler) Routes() []controller.Route {
     return []controller.Route {
-        controller.NewRoute("/healthCheck", []controller.RequestMethodType{controller.GET, controller.POST}),
+        controller.NewRoute(shared_routes.HealthCheck, []controller.RequestMethodType{controller.GET, controller.POST}),
     }
 }
 

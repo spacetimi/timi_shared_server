@@ -4,7 +4,8 @@ import (
     "encoding/json"
     "fmt"
     "github.com/spacetimi/timi_shared_server/code/config"
-    "github.com/spacetimi/timi_shared_server/code/core/controller"
+	"github.com/spacetimi/timi_shared_server/code/controllers/shared_routes"
+	"github.com/spacetimi/timi_shared_server/code/core/controller"
     "github.com/spacetimi/timi_shared_server/code/core/services/metadata_service"
     "github.com/spacetimi/timi_shared_server/code/core/services/metadata_service/metadata_typedefs"
     "github.com/spacetimi/timi_shared_server/utils/logger"
@@ -16,7 +17,7 @@ type LoginHandler struct {      // Implements IRouteHandler
 
 func (lh *LoginHandler) Routes() []controller.Route {
 	return []controller.Route {
-		controller.NewRoute("/login", []controller.RequestMethodType{controller.POST}),
+		controller.NewRoute(shared_routes.Login, []controller.RequestMethodType{controller.POST}),
 	}
 }
 

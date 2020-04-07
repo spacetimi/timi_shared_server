@@ -11,5 +11,6 @@ func (ssc *ServerStatusController) RouteHandlers() []controller.IRouteHandler {
     return []controller.IRouteHandler {
         &HealthCheckHandler{},
         &VersionHandler{},
+        &ConfigHandler{},
     }
 }
