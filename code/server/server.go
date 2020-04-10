@@ -40,6 +40,9 @@ func StartServer(appController controller.IAppController) {
     _router.PathPrefix("/app-images/").
         Handler(http.StripPrefix("/app-images/", http.FileServer(http.Dir(config.GetAppImageFilesPath()))))
 
+    // Set up static file-server for bootstrap resources
+    _router.PathPrefix("/bootstrap/").
+        Handler(http.StripPrefix("/bootstrap/", http.FileServer(http.Dir(config.GetSharedBootstrapResourcesPath()))))
 
     portNumberString := strconv.Itoa(config.GetEnvironmentConfiguration().Port)
     logger.LogInfo("Server started successfully|port=" + portNumberString)
