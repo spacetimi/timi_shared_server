@@ -174,7 +174,7 @@ func showLoginPage(httpResponseWriter http.ResponseWriter, request *http.Request
 
     // Show login page
 
-    templates, err := template.ParseGlob(config.GetTemplateFilesPath() + "/admin_tool/*")
+    templates, err := template.ParseGlob(config.GetSharedTemplateFilesPath() + "/admin_tool/*")
     err = templates.ExecuteTemplate(httpResponseWriter, "admin_login_template.html", adminPageObject)
 
     if err != nil {

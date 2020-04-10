@@ -8,7 +8,7 @@ import (
 )
 
 func showSimpleMessagePage(httpResponseWriter http.ResponseWriter, request *http.Request, pageObject AdminSimpleMessageObject) {
-    templates, err := template.ParseGlob(config.GetTemplateFilesPath() + "/admin_tool/*")
+    templates, err := template.ParseGlob(config.GetSharedTemplateFilesPath() + "/admin_tool/*")
     if err != nil {
         logger.LogError("error parsing templates" +
                         "|request url=" + request.URL.Path +

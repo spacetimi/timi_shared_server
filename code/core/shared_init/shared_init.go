@@ -7,6 +7,7 @@ import (
 	"github.com/spacetimi/timi_shared_server/code/core/services/identity_service"
 	"github.com/spacetimi/timi_shared_server/code/core/services/metadata_service"
 	"github.com/spacetimi/timi_shared_server/code/core/services/metadata_service/metadata_factory"
+	"github.com/spacetimi/timi_shared_server/utils/logger"
 )
 
 func SharedInit(appInitializer IAppInitializer) {
@@ -27,7 +28,10 @@ func SharedInit(appInitializer IAppInitializer) {
 
 	// End shared init. Can now do App init
 
-	appInitializer.AppInit()
+	err := appInitializer.AppInit()
+	if err != nil {
+		logger.LogFatal("error during app init|error=" + err.Error())
+	}
 }
 
 // TODO: Avi: Move this somewhere else?

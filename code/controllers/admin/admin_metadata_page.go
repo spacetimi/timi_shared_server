@@ -184,7 +184,7 @@ func refreshMetadata(httpResponseWriter http.ResponseWriter, request *http.Reque
 }
 
 func showMetadataSelectPage(httpResponseWriter http.ResponseWriter, request *http.Request, adminPageObject AdminPageObject) {
-    templates, err := template.ParseGlob(config.GetTemplateFilesPath() + "/admin_tool/*")
+    templates, err := template.ParseGlob(config.GetSharedTemplateFilesPath() + "/admin_tool/*")
     err = templates.ExecuteTemplate(httpResponseWriter, "metadata_select_page_template.html", adminPageObject)
 
     if err != nil {
@@ -261,7 +261,7 @@ func showMetadataOverviewPage(httpResponseWriter http.ResponseWriter, request *h
         return
     }
 
-    templates, err := template.ParseGlob(config.GetTemplateFilesPath() + "/admin_tool/*")
+    templates, err := template.ParseGlob(config.GetSharedTemplateFilesPath() + "/admin_tool/*")
     if err != nil {
         logger.LogError("error parsing templates" +
                         "|request url=" + request.URL.Path +
@@ -466,7 +466,7 @@ func showMetadataEditVersionPage(httpResponseWriter http.ResponseWriter, request
         return pageObject.Items[i].Key < pageObject.Items[j].Key
     })
 
-    templates, err := template.ParseGlob(config.GetTemplateFilesPath() + "/admin_tool/*")
+    templates, err := template.ParseGlob(config.GetSharedTemplateFilesPath() + "/admin_tool/*")
     if err != nil {
         logger.LogError("error parsing templates" +
                         "|request url=" + request.URL.Path +
