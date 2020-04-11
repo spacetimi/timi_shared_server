@@ -4,6 +4,7 @@ import (
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"reflect"
+	"strings"
 )
 
 func GetFieldByName(structPtr interface{}, fieldName string) (interface{}, error) {
@@ -68,7 +69,11 @@ func MarshalStructPtrToBson(s interface{}) (bson.M, error) {
 	for i := 0; i < numFields; i++ {
 		value := v.Field(i)
 		if value.CanInterface() {
-			bsonMRepresentation[v.Type().Field(i).Name] = value.Interface()
+			field := v.Type().Field(i)
+			bsonTag, ok := field.Tag.Lookup("bson")
+			if !ok || !strings.Contains(bsonTag, "ignore") {
+				bsonMRepresentation[field.Name] = value.Interface()
+			}
 		}
 	}
 

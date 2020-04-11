@@ -14,7 +14,7 @@ type UserNameToIdMappingBlob struct {
     PasswordHash string
     UserId int64
 
-    storage_typedefs.BlobDescriptor
+    storage_typedefs.BlobDescriptor `bson:"ignore"`
 }
 
 func newUserNameToIdMapping(userName string) *UserNameToIdMappingBlob {

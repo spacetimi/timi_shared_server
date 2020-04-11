@@ -16,7 +16,7 @@ type UserBlob struct {
 
     UserName string
 
-    storage_typedefs.BlobDescriptor
+    storage_typedefs.BlobDescriptor `bson:"ignore"`
 }
 
 func newUserBlob(userId int64) *UserBlob {
