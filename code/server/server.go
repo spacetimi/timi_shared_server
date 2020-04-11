@@ -58,8 +58,23 @@ func registerController(c controller.IAppController) {
 
                 requestPathVars := mux.Vars(request)
 
+                postArgs := make(map[string]string)
+                if request.Method == controller.POST.String() {
+                    err := request.ParseForm()
+                    if err == nil {
+                        for key, _ := range request.Form {
+                            postArgs[key] = request.Form.Get(key)
+                        }
+                    } else {
+                        logger.LogError("error parsing post args" +
+                                        "|request url=" + request.URL.Path +
+                                        "|error=" + err.Error())
+                    }
+                }
+
                 args := &controller.HandlerFuncArgs {
-                   RequestPathVars:requestPathVars,
+                   RequestPathVars: requestPathVars,
+                   PostArgs: postArgs,
                 }
 
                 routeHandler.HandlerFunc(httpResponseWriter, request, args)

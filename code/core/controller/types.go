@@ -33,6 +33,7 @@ func (r Route) GetMethodsAsStrings() []string {
 
 type HandlerFuncArgs struct {
     RequestPathVars map[string]string
+    PostArgs map[string]string
 }
 
 type RequestMethodType int
