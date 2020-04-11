@@ -59,16 +59,25 @@ func readEnvironmentConfiguration(pathToConfigFiles string, appEnvString string)
 	environmentConfigFilePath := pathToConfigFiles + "/environment_config." + strings.ToLower(appEnvString) + ".json"
 	environmentConfigFile, err := os.Open(environmentConfigFilePath)
 	if err != nil {
-		logger.LogFatal("Cannot open configuration file at: " + environmentConfigFilePath)
+		logger.LogFatal("cannot open configuration file|file path=" + environmentConfigFilePath)
 		return nil
 	}
-	defer environmentConfigFile.Close()
+	defer func() {
+		err := environmentConfigFile.Close()
+		if err != nil {
+			logger.LogError("error closing config file" +
+							"|file path=" + environmentConfigFilePath +
+							"|error=" + err.Error())
+		}
+	}()
 
 	var environmentConfiguration *EnvironmentConfiguration
 	decoder := json.NewDecoder(environmentConfigFile)
 	err = decoder.Decode(&environmentConfiguration)
 	if err != nil {
-		logger.LogFatal("Error decoding configuration file at: " + environmentConfigFilePath + ". Error: " + err.Error())
+		logger.LogFatal("error decoding configuration file" +
+						"|file path=" + environmentConfigFilePath +
+						"|error=" + err.Error())
 		return nil
 	}
 

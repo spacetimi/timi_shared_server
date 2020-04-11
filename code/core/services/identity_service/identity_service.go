@@ -2,6 +2,7 @@ package identity_service
 
 import (
     "context"
+    "encoding/json"
     "errors"
     "github.com/dgrijalva/jwt-go"
     "github.com/spacetimi/timi_shared_server/code/config"
@@ -9,6 +10,7 @@ import (
     "github.com/spacetimi/timi_shared_server/code/core/services/storage_service"
     "github.com/spacetimi/timi_shared_server/utils/encryption_utils"
     "github.com/spacetimi/timi_shared_server/utils/logger"
+    "os"
     "strconv"
     "time"
 )
@@ -18,18 +20,47 @@ var kCountersPrimaryKey string
 var kCountersValueKey string
 var kCountersPrimaryKeyValue string
 
-// TODO: Get the following from somewhere else (preferably app scoped)
-const kUserSessionExpirationTimeHours = 8
-var kJwtSecretKey = []byte("8245EbB91cEa4808Ef064e1c53d0J8L6A8")
+const kConfigFileName = "identity_service_config.json"
+type Config_t struct {
+    UserSessionExpiryHours int
+    JWTSecretKey string
+}
+var Config *Config_t
 
 func Initialize() {
+
+    // Read config file
+    configFilePath := config.GetAppConfigFilesPath() + "/" + kConfigFileName
+    configFile, err := os.Open(configFilePath)
+    if err != nil {
+        logger.LogFatal("cannot open configuration file|file path=" + configFilePath)
+        return
+    }
+    defer func() {
+        err := configFile.Close()
+        if err != nil {
+            logger.LogError("error closing config file" +
+                            "|file path=" + configFilePath +
+                            "|error=" + err.Error())
+        }
+    }()
+
+    decoder := json.NewDecoder(configFile)
+    err = decoder.Decode(&Config)
+    if err != nil {
+        logger.LogFatal("error decoding configuration file" +
+                        "|file path=" + configFilePath +
+                        "|error=" + err.Error())
+        return
+    }
+
     kCountersCollectionName = "counters"
     kCountersPrimaryKey = "counter_name"
     kCountersValueKey = "counter_value"
     kCountersPrimaryKeyValue = config.GetAppName() + "::userid"
 
     // Use a delta of 0 to make sure the required counters-table document is set up
-    _, err := mongo_adaptor.AtomicIncrement(mongo_adaptor.SHARED_DB,
+    _, err = mongo_adaptor.AtomicIncrement(mongo_adaptor.SHARED_DB,
                                             kCountersCollectionName,
                                             kCountersPrimaryKey,
                                             kCountersPrimaryKeyValue,
@@ -37,9 +68,12 @@ func Initialize() {
                                             int64(0),
                                             context.Background())
     if err != nil {
-        logger.LogError("error making sure counters table is set up: " + err.Error())
+        logger.LogFatal("error making sure counters table is set up|error=" + err.Error())
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// Public API:
 
 func GetUserBlobById(userId int64, ctx context.Context) (*UserBlob, error) {
     user, err := loadUserBlobByUserId(userId, ctx)
@@ -106,7 +140,7 @@ func CheckAndGetUserBlobFromUserLoginCredentials(userName string, password strin
 }
 
 func CreateUserLoginToken(user *UserBlob) (string, error) {
-    expiration := time.Now().Add(kUserSessionExpirationTimeHours * time.Hour)
+    expiration := time.Now().Add(time.Duration(Config.UserSessionExpiryHours) * time.Hour)
     claims := &UserJWTClaims{
         UserId: user.UserId,
         StandardClaims: jwt.StandardClaims{
@@ -115,7 +149,7 @@ func CreateUserLoginToken(user *UserBlob) (string, error) {
     }
 
     jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-    jwtTokenString, err := jwtToken.SignedString(kJwtSecretKey)
+    jwtTokenString, err := jwtToken.SignedString([]byte(Config.JWTSecretKey))
 
     if err != nil {
         return "", errors.New("error creating user jwt token string: " + err.Error())
@@ -127,7 +161,7 @@ func CheckAndGetUserBlobFromUserLoginToken(jwtTokenString string, ctx context.Co
     claims := &UserJWTClaims{}
 
     jwtToken, err := jwt.ParseWithClaims(jwtTokenString, claims, func(token *jwt.Token) (interface{}, error) {
-        return kJwtSecretKey, nil
+        return []byte(Config.JWTSecretKey), nil
     })
     if err != nil {
         return nil, errors.New("error parsing user jwt token string: " + err.Error())
