@@ -53,7 +53,7 @@ func GetUserBlobById(userId int64, ctx context.Context) (*UserBlob, error) {
 func CreateNewUserByUserNameAndPassword(userName string, password string, ctx context.Context) (*UserBlob, error) {
     uidm, err := loadUserNameToIdMappingByUserName(userName, ctx)
     if err == nil {
-        return nil, errors.New("username already exists")
+        return nil, errors.New("username \"" + userName + "\" already exists")
     }
 
     newUserId, err := createNewUserID()
