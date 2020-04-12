@@ -80,10 +80,6 @@ func GetSharedTemplateFilesPath() string {
     return GetSharedResourcesPath() + "/templates"
 }
 
-func GetSharedBootstrapResourcesPath() string {
-	return GetSharedResourcesPath() + "/bootstrap/4.4.1"
-}
-
 func GetSharedImageFilesPath() string {
 	return go_vars_helper.GOPATH + "/src/github.com/spacetimi/timi_shared_server/resources/images"
 }
