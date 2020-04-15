@@ -11,6 +11,8 @@ type TemplatedWriter struct {
     _templatesFolderPath string
 
     _templates *template.Template
+
+    ForceReparseTemplates bool
 }
 
 func NewTemplatedWriter(templatesFolderPath string) *TemplatedWriter {
@@ -25,9 +27,9 @@ func NewTemplatedWriter(templatesFolderPath string) *TemplatedWriter {
     return tw
 }
 
-func (tw *TemplatedWriter) Render(writer io.Writer, templateName string, backingObject interface{}, forceReparse bool) error {
+func (tw *TemplatedWriter) Render(writer io.Writer, templateName string, backingObject interface{}) error {
 
-    if forceReparse {
+    if tw.ForceReparseTemplates {
         _ = tw.parseTemplates()
     }
 
