@@ -84,10 +84,17 @@ func GetUserBlobById(userId int64, ctx context.Context) (*UserBlob, error) {
     return user, nil
 }
 
-func CreateNewUserByUserNameAndPassword(userName string, password string, ctx context.Context) (*UserBlob, error) {
+func CreateNewUser(userName string, password string, userEmailAddress string, ctx context.Context) (*UserBlob, error) {
     uidm, err := loadUserNameToIdMappingByUserName(userName, ctx)
     if err == nil {
         return nil, errors.New("username \"" + userName + "\" already exists")
+    }
+
+    if userEmailAddress != "" {
+        _, err := loadUserEmailToIdMappingByUserEmail(userEmailAddress, ctx)
+        if err == nil {
+            return nil, errors.New("email address \"" + userEmailAddress + "\" already in use")
+        }
     }
 
     newUserId, err := createNewUserID()
@@ -100,10 +107,20 @@ func CreateNewUserByUserNameAndPassword(userName string, password string, ctx co
         return nil, errors.New("error creating hash of password: " + err.Error())
     }
 
+    if userEmailAddress != "" {
+        ueidm := newUserEmailToIdMapping(userEmailAddress)
+        ueidm.UserId = newUserId
+        err = storage_service.SetBlob(ueidm, ctx)
+        if err != nil {
+            return nil, errors.New("error saving new user email to id mapping: " + err.Error())
+        }
+    }
+
     newUserBlob := newUserBlob(newUserId)
     newUserBlob.CreatedTime = time.Now().Unix()
     newUserBlob.LastLoginTime = time.Now().Unix()
     newUserBlob.UserName = userName
+    newUserBlob.UserEmailAddress = userEmailAddress
     err = storage_service.SetBlob(newUserBlob, ctx)
     if err != nil {
         return nil, errors.New("error saving new user blob: " + err.Error())

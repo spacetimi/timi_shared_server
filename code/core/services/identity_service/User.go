@@ -15,6 +15,7 @@ type UserBlob struct {
     LastLoginTime int64
 
     UserName string
+    UserEmailAddress string
 
     storage_typedefs.BlobDescriptor `bson:"ignore"`
 }
