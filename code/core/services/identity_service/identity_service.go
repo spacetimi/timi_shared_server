@@ -156,6 +156,20 @@ func CheckAndGetUserBlobFromUserLoginCredentials(userName string, password strin
     return user, nil
 }
 
+func CheckAndGetUserBlobFromUserEmailAddress(userEmailAddress string, ctx context.Context) (*UserBlob, error) {
+    ueidm, err := loadUserEmailToIdMappingByUserEmail(userEmailAddress, ctx)
+    if err != nil {
+        return nil, errors.New("error loading user email address to id mapping: " + err.Error())
+    }
+
+    user, err := loadUserBlobByUserId(ueidm.UserId, ctx)
+    if err != nil {
+        return nil, errors.New("error loading user blob for id: " + strconv.FormatInt(ueidm.UserId, 10))
+    }
+
+    return user, nil
+}
+
 func CreateUserLoginToken(user *UserBlob) (string, error) {
     expiration := time.Now().Add(time.Duration(Config.UserSessionExpiryHours) * time.Hour)
     claims := &UserJWTClaims{
