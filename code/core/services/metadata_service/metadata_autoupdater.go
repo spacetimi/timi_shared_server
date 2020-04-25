@@ -25,7 +25,7 @@ func MarkMetadataAsUpdated(space metadata_typedefs.MetadataSpace) error {
 
     timestamp := time.Now().Unix()
 
-    err := redis_adaptor.Write(key, strconv.FormatInt(timestamp, 10))
+    err := redis_adaptor.Write(key, strconv.FormatInt(timestamp, 10), 7 * 24 * time.Hour)
     if err != nil {
         logger.LogError("error marking metadata as updated|" +
                         "|redis key=" + key +

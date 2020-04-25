@@ -4,12 +4,15 @@ import (
 	"errors"
 	"github.com/go-redis/redis"
 	"github.com/spacetimi/timi_shared_server/code/config"
+	"time"
 )
 
-var Client *redis.Client
+var _client *redis.Client
+
+var EXPIRATION_DEFAULT time.Duration = 48 * time.Hour
 
 func Initialize() {
-	Client = redis.NewClient(&redis.Options {
+	_client = redis.NewClient(&redis.Options {
 		Addr:     config.GetEnvironmentConfiguration().SharedRedisURL,
 		Password: config.GetEnvironmentConfiguration().SharedRedisPasswd,
 		DB:       0,  // use default DB
@@ -17,7 +20,7 @@ func Initialize() {
 }
 
 func Ping() (bool, error) {
-	_, err := Client.Ping().Result()
+	_, err := _client.Ping().Result()
 	if err != nil {
 		return false, errors.New("error pinging redis: " + err.Error())
 	}
@@ -26,7 +29,7 @@ func Ping() (bool, error) {
 }
 
 func Read(key string) (string, bool) {
-	val, err := Client.Get(key).Result()
+	val, err := _client.Get(key).Result()
 	if err != nil {
 		return "", false
 	}
@@ -34,8 +37,8 @@ func Read(key string) (string, bool) {
 	return val, true
 }
 
-func Write(key string, value string) error {
-	err := Client.Set(key, value, 0).Err()
+func Write(key string, value string, expiration time.Duration) error {
+	err := _client.Set(key, value, expiration).Err()
 	if err != nil {
 		return errors.New("error writing value for key: " + err.Error())
 	}
@@ -44,7 +47,7 @@ func Write(key string, value string) error {
 }
 
 func Delete(key string) error {
-	err := Client.Del(key).Err()
+	err := _client.Del(key).Err()
 	if err != nil {
 		return errors.New("error deleting key: " + err.Error())
 	}

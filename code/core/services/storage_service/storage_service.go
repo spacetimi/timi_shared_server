@@ -157,7 +157,7 @@ func writeBlobToRedis(redisKey string, blobPtr storage_typedefs.IBlob) error {
         return errors.New("error serializing blob: " + err.Error())
     }
 
-    err = redis_adaptor.Write(redisKey, string(bytes))
+    err = redis_adaptor.Write(redisKey, string(bytes), redis_adaptor.EXPIRATION_DEFAULT)
     if err != nil {
         return errors.New("error writing blob to redis: " + err.Error())
     }
