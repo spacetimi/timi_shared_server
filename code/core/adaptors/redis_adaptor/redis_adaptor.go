@@ -42,3 +42,12 @@ func Write(key string, value string) error {
 
 	return nil
 }
+
+func Delete(key string) error {
+	err := Client.Del(key).Err()
+	if err != nil {
+		return errors.New("error deleting key: " + err.Error())
+	}
+
+	return nil
+}
