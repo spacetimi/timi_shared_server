@@ -18,6 +18,7 @@ const (
 type EnvironmentConfiguration struct {
 	AppEnvironment AppEnvironment_t
 	Port int
+	ApiServerBaseURL string
 
 	// MongoDB config
 	SharedMongoURL string
