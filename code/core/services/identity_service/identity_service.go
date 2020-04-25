@@ -137,6 +137,35 @@ func CreateNewUser(userName string, password string, userEmailAddress string, ct
     return newUserBlob, nil
 }
 
+func UpdateUserPassword(user *UserBlob, password string, ctx context.Context) error {
+
+    passwordHash, err := encryption_utils.HashAndSaltPassword(password)
+    if err != nil {
+        return errors.New("error creating hash of password: " + err.Error())
+    }
+
+    uidm, err := loadUserNameToIdMappingByUserName(user.UserName, ctx)
+    if err != nil {
+        logger.LogError("error loading user name to id mapping" +
+                        "|user id=" + strconv.FormatInt(user.UserId, 10) +
+                        "|user name=" + user.UserName +
+                        "|error=" + err.Error())
+        return errors.New("error getting user name to id mapping: " + err.Error())
+    }
+
+    uidm.PasswordHash = passwordHash
+    err = storage_service.SetBlob(uidm, ctx)
+    if err != nil {
+        logger.LogError("error saving user name to id mapping" +
+                        "|user id=" + strconv.FormatInt(user.UserId, 10) +
+                        "|user name=" + user.UserName +
+                        "|error=" + err.Error())
+        return errors.New("error saving new user name to id mapping: " + err.Error())
+    }
+
+    return nil
+}
+
 func CheckAndGetUserBlobFromUserLoginCredentials(userName string, password string, ctx context.Context) (*UserBlob, error) {
     uidm, err := loadUserNameToIdMappingByUserName(userName, ctx)
     if err != nil {
