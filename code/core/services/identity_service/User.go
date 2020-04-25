@@ -16,6 +16,7 @@ type UserBlob struct {
 
     UserName string
     UserEmailAddress string
+    UserEmailAddressVerified bool
 
     storage_typedefs.BlobDescriptor `bson:"ignore"`
 }

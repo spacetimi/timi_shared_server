@@ -166,6 +166,25 @@ func UpdateUserPassword(user *UserBlob, password string, ctx context.Context) er
     return nil
 }
 
+func SetUserEmailAddressVerified(userId int64, ctx context.Context) error {
+    user, err := GetUserBlobById(userId, ctx)
+    if err != nil {
+        return err
+    }
+
+    if user.UserEmailAddressVerified {
+        return nil
+    }
+
+    user.UserEmailAddressVerified = true
+    err = storage_service.SetBlob(user, ctx)
+    if err != nil {
+        return errors.New("error saving user blob: " + err.Error())
+    }
+
+    return nil
+}
+
 func CheckAndGetUserBlobFromUserLoginCredentials(userName string, password string, ctx context.Context) (*UserBlob, error) {
     uidm, err := loadUserNameToIdMappingByUserName(userName, ctx)
     if err != nil {
