@@ -1,6 +1,10 @@
 package string_utils
 
-import "math/rand"
+import (
+    "encoding/base64"
+    "errors"
+    "math/rand"
+)
 
 func Reverse(s string) string {
     runes := []rune(s)
@@ -28,3 +32,16 @@ func RandomShuffle(s string, seed int64) string {
     return string(bytes)
 }
 
+
+func EncodeBytesAsBase64String(bytes []byte) string {
+    return base64.StdEncoding.EncodeToString(bytes)
+}
+
+func DecodeBase64StringToBytes(s string) ([]byte, error) {
+    data, err := base64.StdEncoding.DecodeString(s)
+    if err != nil {
+        return nil, errors.New("error decoding base64 string: " + err.Error())
+    }
+
+    return data, nil
+}
