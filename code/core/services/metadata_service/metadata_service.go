@@ -141,6 +141,12 @@ func (ms *MetadataService) GetAllVersions(space metadata_typedefs.MetadataSpace)
 	return msa.mdVersionList.Versions
 }
 
+func (ms *MetadataService) GetLatestDefinedVersion(space metadata_typedefs.MetadataSpace) (*core.AppVersion, error) {
+	msa := ms.getMetadataServiceSpace(space)
+
+	return msa.mdVersionList.GetLatestVersionDefined()
+}
+
 func (ms *MetadataService) IsVersionValid(versionString string, space metadata_typedefs.MetadataSpace) (bool, error) {
 	msa := ms.getMetadataServiceSpace(space)
 

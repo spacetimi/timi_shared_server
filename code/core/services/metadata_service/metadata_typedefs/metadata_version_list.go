@@ -48,3 +48,23 @@ func (mvl *MetadataVersionList) CreateNewVersion(version *core.AppVersion, markA
 
 	return nil
 }
+
+func (mvl *MetadataVersionList) GetLatestVersionDefined() (*core.AppVersion, error) {
+    var latestVersion *core.AppVersion
+    for _, versionString := range mvl.Versions {
+        version, err := core.GetAppVersionFromString(versionString)
+        if err != nil {
+        	continue
+		}
+        if latestVersion == nil ||
+           latestVersion.Compare(version) < 0 {
+        	latestVersion = version
+		}
+	}
+
+    if latestVersion == nil {
+    	return nil, errors.New("couldn't find latest version")
+	}
+    return latestVersion, nil
+}
+
