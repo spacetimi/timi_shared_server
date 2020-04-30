@@ -284,7 +284,10 @@ func (ms *MetadataService) SetMetadataItem(itemPtr metadata_typedefs.IMetadataIt
 	err := msa.setMetadataJsonForItem(itemPtr, version)
 
 	if err != nil {
-		logger.LogError("error saving metadata item|error=" + err.Error())
+		logger.LogError("error saving metadata item" +
+						"|version=" + version.String() +
+						"|metadata key=" + itemPtr.GetKey() +
+						"|error=" + err.Error())
 		return errors.New("error saving metadata item: " + err.Error())
 	}
 

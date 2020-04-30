@@ -53,7 +53,7 @@ func GetAppConfigFilesPath() string {
 }
 
 func GetAppMetadataFilesPath() string {
-	return GetAppDirPath() + "/metadata"
+	return GetAppDirPath() + "/tmp/metadata"
 }
 
 func GetAppResourcesPath() string {
@@ -69,7 +69,7 @@ func GetAppImageFilesPath() string {
 }
 
 func GetSharedMetadataFilesPath() string {
-	return go_vars_helper.GOPATH + "/src/github.com/spacetimi/timi_shared_server/metadata"
+	return go_vars_helper.GOPATH + "/src/github.com/spacetimi/timi_shared_server/tmp/metadata"
 }
 
 func GetSharedResourcesPath() string {

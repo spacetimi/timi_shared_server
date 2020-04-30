@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/spacetimi/timi_shared_server/code/config"
 	"github.com/spacetimi/timi_shared_server/code/core/services/metadata_service/metadata_typedefs"
+	"github.com/spacetimi/timi_shared_server/utils/file_utils"
 	"github.com/spacetimi/timi_shared_server/utils/logger"
 	"io/ioutil"
 	"os"
@@ -48,7 +49,40 @@ func (mf *MetadataFetcherFilesystem) SetMetadataJsonByKey(key string, metadataJs
 func (mf *MetadataFetcherFilesystem) GetMetadataVersionList() (*metadata_typedefs.MetadataVersionList, error) {
 	mvl := metadata_typedefs.MetadataVersionList{}
 
+	// Make sure the metadata directory exists if running as env=Local
+	if config.GetEnvironmentConfiguration().AppEnvironment == config.LOCAL &&
+		!file_utils.DoesFileOrDirectoryExist(mf.path) {
+
+		logger.LogInfo("creating tmp/metadata directory|path=" + mf.path)
+
+		err := os.MkdirAll(mf.path, 0755)
+		if err != nil {
+			logger.LogFatal("unable to create metadata directory" +
+							"|path=" + mf.path +
+							"|error=" + err.Error())
+		}
+	}
+
 	filePath := mf.path + "/" + "MetadataVersionList.json"
+
+	// Make sure the metadata-version-list file exists if running as env=Local
+	if config.GetEnvironmentConfiguration().AppEnvironment == config.LOCAL &&
+		!file_utils.DoesFileOrDirectoryExist(filePath) {
+
+		logger.LogInfo("creating empty metadata-version-list file|path=" + filePath)
+
+		emptyMVL := &metadata_typedefs.MetadataVersionList{
+			Versions:[]string{},
+			CurrentVersions:[]string{},
+		}
+		err := mf.SetMetadataVersionList(emptyMVL)
+		if err != nil {
+			logger.LogFatal("error creating empty metadata-version-list file" +
+							"|path=" + filePath +
+							"|error=" + err.Error())
+		}
+	}
+
 	bytes, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		logger.LogError(metadata_typedefs.ERROR_FAILED_TO_READ_METADATA_VERSIONS_LIST +
