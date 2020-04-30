@@ -5,8 +5,14 @@ import (
 	"errors"
 	"github.com/spacetimi/timi_shared_server/utils/logger"
 	"net/http"
+	"os"
 	"strconv"
 )
+
+func DoesFileOrDirectoryExist(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil || os.IsExist(err)
+}
 
 func ReadFileBytesFromURL(url string) ([]byte, error) {
 	response, err := http.Get(url)
