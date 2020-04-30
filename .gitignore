@@ -8,14 +8,14 @@
 # Test binary, built with `go test -c`
 *.test
 
+# tmp files
+tmp/*
+
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
 # IntelliJ
 .idea
-
-# Game metadata files
-metadata/*
 
 # Mac Finder files
 .DS_Store
