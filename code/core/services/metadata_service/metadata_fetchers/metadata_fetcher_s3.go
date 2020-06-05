@@ -12,13 +12,15 @@ import (
 
 type MetadataFetcherS3 struct { // Implements IMetadataFetcher
     url string
-    adminS3BucketName string   // Used for admin tool functions
+    adminS3BucketName string    // Used for admin tool functions
+    awsProfile string           // Used for admin tool functions
 }
 
-func NewMetadataFetcherS3(url string, adminS3BucketName string) metadata_typedefs.IMetadataFetcher {
+func NewMetadataFetcherS3(url string, adminS3BucketName string, awsProfile string) metadata_typedefs.IMetadataFetcher {
     mf := MetadataFetcherS3{
         url:url,
         adminS3BucketName: adminS3BucketName,
+        awsProfile: awsProfile,
     }
     return &mf
 }
@@ -41,7 +43,7 @@ func (mf *MetadataFetcherS3) GetMetadataJsonByKey(key string, version string) (s
  */
 func (mf *MetadataFetcherS3) SetMetadataJsonByKey(key string, metadataJson string, version string) error {
 
-    awsSession, err := aws_helper.GetNewDefaultSession()
+    awsSession, err := aws_helper.GetNewDefaultSession(mf.awsProfile)
     if err != nil {
         return errors.New("error creating aws session: " + err.Error())
     }
@@ -117,7 +119,7 @@ func (mf *MetadataFetcherS3) SetMetadataManifestForVersion(manifest *metadata_ty
 		return errors.New("error serializing new manifest|error=" + err.Error())
 	}
 
-    awsSession, err := aws_helper.GetNewDefaultSession()
+    awsSession, err := aws_helper.GetNewDefaultSession(mf.awsProfile)
     if err != nil {
         return errors.New("error creating aws session: " + err.Error())
     }
@@ -135,7 +137,7 @@ func (mf *MetadataFetcherS3) SetMetadataManifestForVersion(manifest *metadata_ty
  */
 func (mf *MetadataFetcherS3) SetMetadataVersionList(mvl *metadata_typedefs.MetadataVersionList) error {
 
-    awsSession, err := aws_helper.GetNewDefaultSession()
+    awsSession, err := aws_helper.GetNewDefaultSession(mf.awsProfile)
     if err != nil {
         return errors.New("error creating aws session: " + err.Error())
     }

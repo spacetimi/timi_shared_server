@@ -180,7 +180,9 @@ var kAtomicIncrementReturnDocumentOption options.ReturnDocument
 func createMongoClient(mongoURL string) *mongo.Client {
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(mongoURL))
 	if err != nil {
-		logger.LogFatal("Unable to create mongo client: " + err.Error())
+		logger.LogFatal("Unable to create mongo client" +
+						"|mongoURL=" + mongoURL +
+						"|error=" + err.Error())
 	}
 	return client
 }
