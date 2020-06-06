@@ -29,7 +29,7 @@ func GetBlobByPrimaryKeys(outBlobPtr storage_typedefs.IBlob,
     var redisKey string
     if outBlobPtr.IsRedisAllowed() {
         redisKey = getRedisKey(outBlobPtr.GetBlobName(), primaryKeyValues)
-        redisValue, redisOk := redis_adaptor.Read(redisKey)
+        redisValue, redisOk := redis_adaptor.Read(redisKey, ctx)
         if redisOk {
             err := json.Unmarshal([]byte(redisValue), outBlobPtr)
             if err == nil {
@@ -60,7 +60,7 @@ func GetBlobByPrimaryKeys(outBlobPtr storage_typedefs.IBlob,
 
     // Write the blob to redis for faster reads next time
     if outBlobPtr.IsRedisAllowed() {
-        err = writeBlobToRedis(redisKey, outBlobPtr)
+        err = writeBlobToRedis(redisKey, outBlobPtr, ctx)
         if err != nil {
             logger.LogError("error saving blob to redis" +
                             "|blob name=" + outBlobPtr.GetBlobName() +
@@ -102,7 +102,7 @@ func SetBlob(blobPtr storage_typedefs.IBlob, ctx context.Context) error {
             // Fall-through
         } else {
             redisKey := getRedisKey(blobPtr.GetBlobName(), primaryKeyValues)
-            err = writeBlobToRedis(redisKey, blobPtr)
+            err = writeBlobToRedis(redisKey, blobPtr, ctx)
             if err != nil {
                 logger.LogError("error saving blob to redis" +
                                 "|blob name=" + blobPtr.GetBlobName() +
@@ -151,13 +151,13 @@ func getRedisKey(blobName string, primaryKeyValues []interface{}) string {
     return redisKey
 }
 
-func writeBlobToRedis(redisKey string, blobPtr storage_typedefs.IBlob) error {
+func writeBlobToRedis(redisKey string, blobPtr storage_typedefs.IBlob, ctx context.Context) error {
     bytes, err := json.Marshal(blobPtr)
     if err != nil {
         return errors.New("error serializing blob: " + err.Error())
     }
 
-    err = redis_adaptor.Write(redisKey, string(bytes), redis_adaptor.EXPIRATION_DEFAULT)
+    err = redis_adaptor.Write(redisKey, string(bytes), redis_adaptor.EXPIRATION_DEFAULT, ctx)
     if err != nil {
         return errors.New("error writing blob to redis: " + err.Error())
     }

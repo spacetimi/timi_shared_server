@@ -1,6 +1,7 @@
 package metadata_service
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"github.com/spacetimi/timi_shared_server/code/core"
@@ -17,8 +18,8 @@ type MetadataService struct {
 func Initialize() {
     // This is during Initialization. No need to take mutex lock
 	instance = createInstance()
-	go startAutoUpdater(metadata_typedefs.METADATA_SPACE_SHARED)
-	go startAutoUpdater(metadata_typedefs.METADATA_SPACE_APP)
+	go startAutoUpdater(metadata_typedefs.METADATA_SPACE_SHARED, context.Background())
+	go startAutoUpdater(metadata_typedefs.METADATA_SPACE_APP, context.Background())
 }
 
 func createInstance() *MetadataService {
