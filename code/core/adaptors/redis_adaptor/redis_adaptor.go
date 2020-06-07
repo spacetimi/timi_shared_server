@@ -3,7 +3,7 @@ package redis_adaptor
 import (
 	"context"
 	"errors"
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v8"
 	"github.com/spacetimi/timi_shared_server/code/config"
 	"time"
 )
