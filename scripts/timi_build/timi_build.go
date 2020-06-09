@@ -7,12 +7,8 @@ import (
     "github.com/spacetimi/timi_shared_server/utils/go_vars_helper"
     "os"
     "os/exec"
-    "strconv"
     "sync"
 )
-
-/** META properties about the tool/build that are set via -ldflags **/
-var _META_executable_build_epoch_string string  // the time at which this build was made
 
 func usage() {
     fmt.Println("!! Usage: timi_build -app=APP_NAME -env=ENVIRONMENT -appdir=<path to your app> [-v] [-run]")
@@ -20,17 +16,6 @@ func usage() {
 }
 
 func main() {
-
-    /** Verify that we are using the latest version of this tool, and error out otherwise **/
-    executable_build_time, err := strconv.ParseInt(_META_executable_build_epoch_string, 10, 64)
-    if err != nil {
-        fmt.Println("Cannot find executable build time")
-        os.Exit(1)
-    }
-    if !scripting_utilities.CheckIfExecutableIsUpToDate(executable_build_time, go_vars_helper.GOPATH + "/src/github.com/spacetimi/timi_shared_server/scripts") {
-    	fmt.Println("One or more packages in timi_shared_server/scripts/ have been updated since this was compiled. Please compile this script again by going to the timi_shared_server/scripts/timi_build/ folder and running 'make'")
-        os.Exit(1)
-    }
 
     appPtr          := flag.String("app", "", "Name of a valid spacetimi app")
     appDirPtr       := flag.String("appdir", "", "Path to your app. This is the path to the app's directory in GOPATH/src/.../<your_app_name>")
@@ -90,7 +75,7 @@ func build_and_start_local_server(appDirPath string, appName string, appEnv stri
         fmt.Println("Output path: " + outputFilePath)
     }
 
-    buildCommand := exec.Command(go_vars_helper.GOROOT + "/bin/go", "build", "-o", outputFilePath, appDirPath + "/main/main.go")
+    buildCommand := exec.Command(go_vars_helper.GOROOT + "/bin/go", "build", "-o", outputFilePath, "-modfile", "go.local.mod", appDirPath + "/main/main.go")
     buildCommand.Stdout = os.Stdout
     buildCommand.Stderr = os.Stderr
     err = buildCommand.Run()
