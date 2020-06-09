@@ -75,7 +75,8 @@ func build_and_start_local_server(appDirPath string, appName string, appEnv stri
         fmt.Println("Output path: " + outputFilePath)
     }
 
-    buildCommand := exec.Command(go_vars_helper.GOROOT + "/bin/go", "build", "-o", outputFilePath, "-modfile", "go.local.mod", appDirPath + "/main/main.go")
+    buildCommand := exec.Command(go_vars_helper.GOROOT + "/bin/go", "build", "-o", outputFilePath, "main/main.go")
+    buildCommand.Dir = appDirPath
     buildCommand.Stdout = os.Stdout
     buildCommand.Stderr = os.Stderr
     err = buildCommand.Run()
