@@ -14,23 +14,20 @@ const (
 	STAGING
 	PRODUCTION
 )
+func (appEnvironment AppEnvironment_t) String() string {
+	switch appEnvironment {
+	case LOCAL: return "Local"
+	case TEST: return "Test"
+	case STAGING: return "Staging"
+	case PRODUCTION: return "Production"
+	}
+	return ""
+}
 
 type EnvironmentConfiguration struct {
 	AppEnvironment AppEnvironment_t
 	Port int
 	ApiServerBaseURL string
-
-	// MongoDB config
-	SharedMongoURL string
-	SharedDatabaseName string
-	AppMongoURL string
-	AppDatabaseName string
-
-	// Redis config
-	SharedRedisURL string
-	SharedRedisPasswd string
-	AppRedisURL string
-	AppRedisPasswd string
 
 	// MetaData config
 	SharedMetadataSourceURL string

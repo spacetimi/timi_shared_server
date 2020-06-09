@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"github.com/go-redis/redis/v8"
-	"github.com/spacetimi/timi_shared_server/code/config"
 	"time"
 )
 
@@ -12,10 +11,15 @@ var _client *redis.Client
 
 var EXPIRATION_DEFAULT time.Duration = 48 * time.Hour
 
-func Initialize() {
+type Config struct {
+	RedisURL string
+	RedisPasswd string
+}
+
+func Initialize(cfg Config) {
 	_client = redis.NewClient(&redis.Options {
-		Addr:     config.GetEnvironmentConfiguration().SharedRedisURL,
-		Password: config.GetEnvironmentConfiguration().SharedRedisPasswd,
+		Addr:     cfg.RedisURL,
+		Password: cfg.RedisPasswd,
 		DB:       0,  // use default DB
 	})
 }

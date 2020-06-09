@@ -17,12 +17,18 @@ func init() {
     kAtomicIncrementReturnDocumentOption = options.After
 }
 
-func Initialize(sharedMongoURL string, sharedDBName string,
-				appMongoURL string, appDBName string) {
-    _sharedMongoClient = createMongoClient(sharedMongoURL)
-    _sharedDBName 	  = sharedDBName
-    _appMongoClient    = createMongoClient(appMongoURL)
-    _appDBName         = appDBName
+type Config struct {
+	SharedMongoURL string
+	SharedDBName string
+	AppMongoURL string
+	AppDBName string
+}
+
+func Initialize(cfg Config) {
+    _sharedMongoClient = createMongoClient(cfg.SharedMongoURL)
+    _sharedDBName 	  = cfg.SharedDBName
+    _appMongoClient    = createMongoClient(cfg.AppMongoURL)
+    _appDBName         = cfg.AppDBName
 }
 
 func GetDataItemByPrimaryKeys(dbSpace DBSpace,
