@@ -31,6 +31,8 @@ func (hch *HealthCheckHandler) HandlerFunc(httpResponseWriter http.ResponseWrite
 }
 
 func performHealthChecks(ctx context.Context) (bool, error) {
+    // TODO: Check if each service is being used before checking their health
+
     _, err := redis_adaptor.Ping(ctx)
     if err != nil {
         return false, errors.New("check redis failed with error: " + err.Error())
