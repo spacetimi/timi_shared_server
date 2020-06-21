@@ -18,6 +18,18 @@ func GetDurationBetweenTimes(first time.Time, second time.Time) time.Duration {
 	return second.Sub(first)
 }
 
+func GetLocalYear() int {
+	return time.Now().Year()
+}
+
+func GetLocalMonth() int {
+	return int(time.Now().Month())
+}
+
+func GetLocalDayOfMonth() int {
+	return time.Now().Day()
+}
+
 func BeginningOfDay(t time.Time) time.Time {
 	year, month, day := t.Date()
 	return time.Date(year, month, day, 0, 0, 0, 0, t.Location())
