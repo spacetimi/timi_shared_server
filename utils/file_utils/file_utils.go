@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/spacetimi/timi_shared_server/utils/logger"
@@ -118,4 +119,33 @@ func ReadJsonFileIntoJsonObject(filePath string, jsonObject interface{}) error {
 	}
 	return nil
 
+}
+
+func GetFileNamesInDirectory(path string) ([]string, error) {
+	if !DoesFileOrDirectoryExist(path) {
+		return nil, errors.New("no such directory")
+	}
+
+	directory, err := os.Open(path)
+	if err != nil {
+		return nil, errors.New("error opening directory: " + err.Error())
+	}
+
+	fileNames, err := directory.Readdirnames(0)
+	if err != nil {
+		return nil, err
+	}
+	return fileNames, nil
+}
+
+func GetFilePathsInDirectoryMatchingPattern(path string, pattern string) ([]string, error) {
+	if !DoesFileOrDirectoryExist(path) {
+		return nil, errors.New("no such directory")
+	}
+
+	fileNames, err := filepath.Glob(path + "/" + pattern)
+	if err != nil {
+		return nil, err
+	}
+	return fileNames, nil
 }
