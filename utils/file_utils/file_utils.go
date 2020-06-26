@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/spacetimi/timi_shared_server/utils/logger"
 )
@@ -29,6 +30,19 @@ func GetFileNamesFromPaths(filePaths []string) []string {
 	}
 
 	return fileNames
+}
+
+func GetFileNameWithoutExtension(fileName string) string {
+	return strings.TrimSuffix(fileName, filepath.Ext(fileName))
+}
+
+func GetFileModTimeUnix(path string) (int64, error) {
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		return -1, err
+	}
+
+	return fileInfo.ModTime().Unix(), nil
 }
 
 func ReadFileBytesFromURL(url string) ([]byte, error) {
