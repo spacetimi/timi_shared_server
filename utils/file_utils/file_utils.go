@@ -18,6 +18,19 @@ func DoesFileOrDirectoryExist(path string) bool {
 	return err == nil || os.IsExist(err)
 }
 
+func GetFileNameFromPath(filePath string) string {
+	return filepath.Base(filePath)
+}
+
+func GetFileNamesFromPaths(filePaths []string) []string {
+	var fileNames []string
+	for _, filePath := range filePaths {
+		fileNames = append(fileNames, GetFileNameFromPath(filePath))
+	}
+
+	return fileNames
+}
+
 func ReadFileBytesFromURL(url string) ([]byte, error) {
 	response, err := http.Get(url)
 	if err != nil {
