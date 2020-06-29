@@ -97,7 +97,7 @@ func CopyFile(sourcePath string, destinationPath string) error {
 	defer func() {
 		err := sourceFile.Close()
 		if err != nil {
-			logger.LogWarning("error closing file" + "|file path=" + sourcePath + "|error=" + err.Error())
+			logger.LogWarning("error closing source file" + "|file path=" + sourcePath + "|error=" + err.Error())
 		}
 	}()
 
@@ -105,12 +105,6 @@ func CopyFile(sourcePath string, destinationPath string) error {
 	if err != nil {
 		return errors.New("error creating destination file: " + err.Error())
 	}
-	defer func() {
-		err := destinationFile.Close()
-		if err != nil {
-			logger.LogWarning("error closing file" + "|file path=" + destinationPath + "|error=" + err.Error())
-		}
-	}()
 
 	_, err = io.Copy(destinationFile, sourceFile)
 	if err != nil {
