@@ -14,6 +14,10 @@ func DurationToSeconds(d time.Duration) int64 {
 	return int64(d.Seconds())
 }
 
+func DurationToDays(d time.Duration) int64 {
+	return DurationToSeconds(d) / (3600 * 24)
+}
+
 func GetDurationBetweenTimes(first time.Time, second time.Time) time.Duration {
 	return second.Sub(first)
 }
