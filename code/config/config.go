@@ -1,8 +1,10 @@
 package config
 
 import (
-	"github.com/spacetimi/timi_shared_server/utils/logger"
 	"os"
+
+	"github.com/spacetimi/timi_shared_server/utils/go_vars_helper"
+	"github.com/spacetimi/timi_shared_server/utils/logger"
 )
 
 var _appName string
@@ -12,26 +14,25 @@ var _appEnvironmentString string
 
 var _environmentConfiguration *EnvironmentConfiguration
 
-// Package init
-func init() {
-	_appName = os.Getenv("app_name")
-	if _appName == "" {
-		logger.LogFatal("app name not set")
-	}
+func Initialize(appName string) {
+	_appName = appName
 
 	_appDirPath = os.Getenv("app_dir_path")
 	if _appDirPath == "" {
-		logger.LogFatal("app dir path not set")
+		// Fallback to default
+		_appDirPath = go_vars_helper.GOPATH + "/src/github.com/spacetimi/" + _appName
 	}
 
 	_sharedDirPath = os.Getenv("shared_dir_path")
 	if _sharedDirPath == "" {
-		logger.LogFatal("shared dir path not set")
+		// Fallback to default
+		_sharedDirPath = go_vars_helper.GOPATH + "/src/github.com/spacetimi/timi_shared_server"
 	}
 
 	_appEnvironmentString = os.Getenv("app_environment")
 	if _appEnvironmentString == "" {
-		logger.LogFatal("app environment not set")
+		// Fallback to default
+		_appEnvironmentString = "Local"
 	}
 
 	_environmentConfiguration = readEnvironmentConfiguration(GetAppConfigFilesPath(), _appEnvironmentString)
@@ -66,7 +67,7 @@ func GetAppResourcesPath() string {
 }
 
 func GetAppTemplateFilesPath() string {
-    return GetAppResourcesPath() + "/templates"
+	return GetAppResourcesPath() + "/templates"
 }
 
 func GetAppImageFilesPath() string {
@@ -86,10 +87,9 @@ func GetSharedResourcesPath() string {
 }
 
 func GetSharedTemplateFilesPath() string {
-    return GetSharedResourcesPath() + "/templates"
+	return GetSharedResourcesPath() + "/templates"
 }
 
 func GetSharedImageFilesPath() string {
 	return GetSharedResourcesPath() + "/images"
 }
-
