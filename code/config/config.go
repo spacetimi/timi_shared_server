@@ -1,32 +1,38 @@
 package config
 
 import (
+	"os"
+
 	"github.com/spacetimi/timi_shared_server/utils/go_vars_helper"
 	"github.com/spacetimi/timi_shared_server/utils/logger"
-	"os"
 )
 
 var _appName string
 var _appDirPath string
+var _sharedDirPath string
 var _appEnvironmentString string
 
 var _environmentConfiguration *EnvironmentConfiguration
 
-// Package init
-func init() {
-	_appName = os.Getenv("app_name")
-	if _appName == "" {
-		panic("App Name not set")
-	}
+func Initialize(appName string) {
+	_appName = appName
 
 	_appDirPath = os.Getenv("app_dir_path")
 	if _appDirPath == "" {
-		panic("App Dir Path not set")
+		// Fallback to default
+		_appDirPath = go_vars_helper.GOPATH + "/src/github.com/spacetimi/" + _appName
+	}
+
+	_sharedDirPath = os.Getenv("shared_dir_path")
+	if _sharedDirPath == "" {
+		// Fallback to default
+		_sharedDirPath = go_vars_helper.GOPATH + "/src/github.com/spacetimi/timi_shared_server"
 	}
 
 	_appEnvironmentString = os.Getenv("app_environment")
 	if _appEnvironmentString == "" {
-		panic("App Environment not set")
+		// Fallback to default
+		_appEnvironmentString = "Local"
 	}
 
 	_environmentConfiguration = readEnvironmentConfiguration(GetAppConfigFilesPath(), _appEnvironmentString)
@@ -61,26 +67,29 @@ func GetAppResourcesPath() string {
 }
 
 func GetAppTemplateFilesPath() string {
-    return GetAppResourcesPath() + "/templates"
+	return GetAppResourcesPath() + "/templates"
 }
 
 func GetAppImageFilesPath() string {
 	return GetAppResourcesPath() + "/images"
 }
 
+func GetSharedDirPath() string {
+	return _sharedDirPath
+}
+
 func GetSharedMetadataFilesPath() string {
-	return go_vars_helper.GOPATH + "/src/github.com/spacetimi/timi_shared_server/tmp/metadata"
+	return GetSharedDirPath() + "/tmp/metadata"
 }
 
 func GetSharedResourcesPath() string {
-	return go_vars_helper.GOPATH + "/src/github.com/spacetimi/timi_shared_server/resources"
+	return GetSharedDirPath() + "/resources"
 }
 
 func GetSharedTemplateFilesPath() string {
-    return GetSharedResourcesPath() + "/templates"
+	return GetSharedResourcesPath() + "/templates"
 }
 
 func GetSharedImageFilesPath() string {
-	return go_vars_helper.GOPATH + "/src/github.com/spacetimi/timi_shared_server/resources/images"
+	return GetSharedResourcesPath() + "/images"
 }
-

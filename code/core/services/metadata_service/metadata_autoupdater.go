@@ -1,6 +1,7 @@
 package metadata_service
 
 import (
+    "context"
     "github.com/spacetimi/timi_shared_server/code/config"
     "github.com/spacetimi/timi_shared_server/code/core/adaptors/redis_adaptor"
     "github.com/spacetimi/timi_shared_server/code/core/services/metadata_service/metadata_typedefs"
@@ -15,7 +16,7 @@ const kRedisKeySharedMetadataLastUpdatedTimestamp   = "metadata_last_up:shared"
 var lastUpdatedAppTimestamp int64
 var lastUpdatedSharedTimestamp int64
 
-func MarkMetadataAsUpdated(space metadata_typedefs.MetadataSpace) error {
+func MarkMetadataAsUpdated(space metadata_typedefs.MetadataSpace, ctx context.Context) error {
     var key string
     if space == metadata_typedefs.METADATA_SPACE_SHARED {
         key = kRedisKeySharedMetadataLastUpdatedTimestamp
@@ -25,7 +26,7 @@ func MarkMetadataAsUpdated(space metadata_typedefs.MetadataSpace) error {
 
     timestamp := time.Now().Unix()
 
-    err := redis_adaptor.Write(key, strconv.FormatInt(timestamp, 10), 7 * 24 * time.Hour)
+    err := redis_adaptor.Write(key, strconv.FormatInt(timestamp, 10), 7 * 24 * time.Hour, ctx)
     if err != nil {
         logger.LogError("error marking metadata as updated|" +
                         "|redis key=" + key +
@@ -52,7 +53,7 @@ func RefreshLastUpdatedTimestamps() {
     lastUpdatedAppTimestamp    = time.Now().Unix()
 }
 
-func CheckIfMetadataUpToDate(space metadata_typedefs.MetadataSpace) bool {
+func CheckIfMetadataUpToDate(space metadata_typedefs.MetadataSpace, ctx context.Context) bool {
     var key string
     var lastUpdatedTimestamp int64
     if space == metadata_typedefs.METADATA_SPACE_SHARED {
@@ -63,10 +64,10 @@ func CheckIfMetadataUpToDate(space metadata_typedefs.MetadataSpace) bool {
         lastUpdatedTimestamp = lastUpdatedAppTimestamp
     }
 
-    metadataEditedTimestampString, ok := redis_adaptor.Read(key)
+    metadataEditedTimestampString, ok := redis_adaptor.Read(key, ctx)
     if !ok {
         // No last updated timestamp. Create the timestamp as now, and Force refresh to be safe
-        err := MarkMetadataAsUpdated(space)
+        err := MarkMetadataAsUpdated(space, ctx)
         if err != nil {
             logger.LogError("error trying to force mark metadata as updated" +
                             "|space=" + space.String() +
@@ -91,18 +92,18 @@ func CheckIfMetadataUpToDate(space metadata_typedefs.MetadataSpace) bool {
     return true
 }
 
-func startAutoUpdater(space metadata_typedefs.MetadataSpace) {
+func startAutoUpdater(space metadata_typedefs.MetadataSpace, ctx context.Context) {
     RefreshLastUpdatedTimestamps()
 
     ticker := time.NewTicker(time.Second * time.Duration(config.GetEnvironmentConfiguration().MetadataAutoUpdaterPollSeconds))
-    checkAndAutoUpdateMetadata(space)
+    checkAndAutoUpdateMetadata(space, ctx)
     for range ticker.C {
-        checkAndAutoUpdateMetadata(space)
+        checkAndAutoUpdateMetadata(space, ctx)
     }
 }
 
-func checkAndAutoUpdateMetadata(space metadata_typedefs.MetadataSpace) {
-    if !CheckIfMetadataUpToDate(space) {
+func checkAndAutoUpdateMetadata(space metadata_typedefs.MetadataSpace, ctx context.Context) {
+    if !CheckIfMetadataUpToDate(space, ctx) {
         logger.LogInfo("refresh triggered to re-fetch stale metadata" +
                        "|space=" + space.String())
         RefreshMetadata()

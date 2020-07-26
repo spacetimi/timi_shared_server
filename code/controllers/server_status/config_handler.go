@@ -40,15 +40,18 @@ func (ch *ConfigHandler) HandlerFunc(httpResponseWriter http.ResponseWriter, req
     _, _ = fmt.Fprintln(httpResponseWriter, "Environment: " + envString)
     _, _ = fmt.Fprintln(httpResponseWriter, "")
 
-    _, _ = fmt.Fprintln(httpResponseWriter, "Shared MongoDB URL: " + config.GetEnvironmentConfiguration().SharedMongoURL)
-    _, _ = fmt.Fprintln(httpResponseWriter, "App MongoDB URL: " + config.GetEnvironmentConfiguration().AppMongoURL)
-    _, _ = fmt.Fprintln(httpResponseWriter, "")
+    // TODO: Also print the hash of the latest commit in app and shared?
 
-    _, _ = fmt.Fprintln(httpResponseWriter, "Shared DB Name: " + config.GetEnvironmentConfiguration().SharedDatabaseName)
-    _, _ = fmt.Fprintln(httpResponseWriter, "App DB Name: " + config.GetEnvironmentConfiguration().AppDatabaseName)
-    _, _ = fmt.Fprintln(httpResponseWriter, "")
-
-    _, _ = fmt.Fprintln(httpResponseWriter, "Shared Redis URL: " + config.GetEnvironmentConfiguration().SharedRedisURL)
-    _, _ = fmt.Fprintln(httpResponseWriter, "App Redis URL: " + config.GetEnvironmentConfiguration().AppRedisURL)
+    // TODO: Figure out how to print these configs (probably by hanging on to the Config object in each service and returning that)
+    //_, _ = fmt.Fprintln(httpResponseWriter, "Shared MongoDB URL: " + config.GetEnvironmentConfiguration().SharedMongoURL)
+    //_, _ = fmt.Fprintln(httpResponseWriter, "App MongoDB URL: " + config.GetEnvironmentConfiguration().AppMongoURL)
+    //_, _ = fmt.Fprintln(httpResponseWriter, "")
+    //
+    //_, _ = fmt.Fprintln(httpResponseWriter, "Shared DB Name: " + config.GetEnvironmentConfiguration().SharedDatabaseName)
+    //_, _ = fmt.Fprintln(httpResponseWriter, "App DB Name: " + config.GetEnvironmentConfiguration().AppDatabaseName)
+    //_, _ = fmt.Fprintln(httpResponseWriter, "")
+    //
+    //_, _ = fmt.Fprintln(httpResponseWriter, "Shared Redis URL: " + config.GetEnvironmentConfiguration().SharedRedisURL)
+    //_, _ = fmt.Fprintln(httpResponseWriter, "App Redis URL: " + config.GetEnvironmentConfiguration().AppRedisURL)
 }
 

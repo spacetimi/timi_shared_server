@@ -1,6 +1,7 @@
 package server_status
 
 import (
+    "context"
     "errors"
     "fmt"
     "github.com/spacetimi/timi_shared_server/code/controllers/shared_routes"
@@ -20,7 +21,7 @@ func (hch *HealthCheckHandler) Routes() []controller.Route {
 
 func (hch *HealthCheckHandler) HandlerFunc(httpResponseWriter http.ResponseWriter, request *http.Request, args *controller.HandlerFuncArgs) {
 
-    ok, err := performHealthChecks()
+    ok, err := performHealthChecks(request.Context())
 
     if ok {
         _, _ = fmt.Fprintln(httpResponseWriter, "ok")
@@ -29,8 +30,10 @@ func (hch *HealthCheckHandler) HandlerFunc(httpResponseWriter http.ResponseWrite
     }
 }
 
-func performHealthChecks() (bool, error) {
-    _, err := redis_adaptor.Ping()
+func performHealthChecks(ctx context.Context) (bool, error) {
+    // TODO: Check if each service is being used before checking their health
+
+    _, err := redis_adaptor.Ping(ctx)
     if err != nil {
         return false, errors.New("check redis failed with error: " + err.Error())
     }

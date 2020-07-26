@@ -1,116 +1,114 @@
 package main
 
 import (
-    "flag"
-    "fmt"
-    "github.com/spacetimi/timi_shared_server/scripts/scripting_utilities"
-    "github.com/spacetimi/timi_shared_server/utils/go_vars_helper"
-    "os"
-    "os/exec"
-    "strconv"
-    "sync"
+	"flag"
+	"fmt"
+	"os"
+	"os/exec"
+	"sync"
+
+	"github.com/spacetimi/timi_shared_server/scripts/scripting_utilities"
+	"github.com/spacetimi/timi_shared_server/utils/go_vars_helper"
 )
 
-/** META properties about the tool/build that are set via -ldflags **/
-var _META_executable_build_epoch_string string  // the time at which this build was made
-
 func usage() {
-    fmt.Println("!! Usage: timi_build -app=APP_NAME -env=ENVIRONMENT -appdir=<path to your app> [-v] [-run]")
-    flag.PrintDefaults()
+	fmt.Println("!! Usage: timi_build -app=APP_NAME -env=ENVIRONMENT -appdir=<path to your app's code> -shareddir=<path to shared code> [-v] [-run]")
+	flag.PrintDefaults()
 }
 
 func main() {
 
-    /** Verify that we are using the latest version of this tool, and error out otherwise **/
-    executable_build_time, err := strconv.ParseInt(_META_executable_build_epoch_string, 10, 64)
-    if err != nil {
-        fmt.Println("Cannot find executable build time")
-        os.Exit(1)
-    }
-    if !scripting_utilities.CheckIfExecutableIsUpToDate(executable_build_time, go_vars_helper.GOPATH + "/src/github.com/spacetimi/timi_shared_server/scripts") {
-    	fmt.Println("One or more packages in timi_shared_server/scripts/ have been updated since this was compiled. Please compile this script again by going to the timi_shared_server/scripts/timi_build/ folder and running 'make'")
-        os.Exit(1)
-    }
+	appPtr := flag.String("app", "", "Name of a valid spacetimi app")
+	appDirPtr := flag.String("appdir", "", "Path to your app's code.")
+	sharedDirPtr := flag.String("shareddir", "", "Path to shared code.")
+	envPtr := flag.String("env", "", "Local, Test, Staging, Production")
+	verbosePtr := flag.Bool("v", false, "Verbose output from this build tool")
+	runPtr := flag.Bool("run", false, "Run after building. If absent, build only")
 
-    appPtr          := flag.String("app", "", "Name of a valid spacetimi app")
-    appDirPtr       := flag.String("appdir", "", "Path to your app. This is the path to the app's directory in GOPATH/src/.../<your_app_name>")
-    envPtr          := flag.String("env", "", "Local, Test, Staging, Production")
-    verbosePtr      := flag.Bool("v", false, "Verbose output from this build tool")
-    runPtr          := flag.Bool("run", false, "Run after building. If absent, build only")
+	flag.Usage = usage
+	flag.Parse()
 
-    flag.Usage = usage
-    flag.Parse()
+	appName := *appPtr
+	appDir := *appDirPtr
+	sharedDir := *sharedDirPtr
+	appEnv := *envPtr
+	verbose := *verbosePtr
+	shouldRun := *runPtr
 
-    appName   := *appPtr
-    appDir    := *appDirPtr
-    appEnv    := *envPtr
-    verbose   := *verbosePtr
-    shouldRun := *runPtr
+	/** Validate parameters or die **/
+	if len(*appPtr) == 0 ||
+		len(*envPtr) == 0 ||
+		(appName != "bonda" && appName != "passman_server" && appName != "pfh_reader_server") ||
+		len(appDir) == 0 ||
+		len(sharedDir) == 0 ||
+		(appEnv != "Local" && appEnv != "Test" && appEnv != "Staging" && appEnv != "Production") {
 
-    /** Validate parameters or die **/
-    if len(*appPtr) == 0 ||
-       len(*envPtr) == 0 ||
-       (appName != "bonda" && appName != "passman") ||
-       len(appDir) == 0 ||
-       (appEnv != "Local" && appEnv != "Test" && appEnv != "Staging" && appEnv != "Production"){
+		flag.Usage()
+		os.Exit(1)
+	}
 
-        flag.Usage()
-        os.Exit(1)
-    }
-
-    var waitGroup sync.WaitGroup
-    waitGroup.Add(1)
-    go func() {
-        defer waitGroup.Done()
-        err := build_and_start_local_server(appDir, appName, appEnv, verbose, shouldRun)
-        if err != nil {
-            fmt.Println("Build failed|error=" + err.Error())
-            os.Exit(1)
-        }
-    }()
-    waitGroup.Wait()
+	var waitGroup sync.WaitGroup
+	waitGroup.Add(1)
+	go func() {
+		defer waitGroup.Done()
+		err := build_and_start_local_server(appDir, sharedDir, appName, appEnv, verbose, shouldRun)
+		if err != nil {
+			fmt.Println("Build failed|error=" + err.Error())
+			os.Exit(1)
+		}
+	}()
+	waitGroup.Wait()
 }
 
-
-func build_and_start_local_server(appDirPath string, appName string, appEnv string, verbose bool, shouldRunAfterBuilding bool) error {
+func build_and_start_local_server(appDirPath string, sharedDirPath string, appName string, appEnv string, verbose bool, shouldRunAfterBuilding bool) error {
 
 	appDir, err := os.Stat(appDirPath)
 	if err != nil {
-	    return scripting_utilities.ScriptError{err.Error()}
-    }
+		return scripting_utilities.ScriptError{err.Error()}
+	}
 	if !appDir.IsDir() {
-	    return scripting_utilities.ScriptError{appDirPath + " is not a directory"}
-    }
+		return scripting_utilities.ScriptError{appDirPath + " is not a directory"}
+	}
+
+	sharedDir, err := os.Stat(sharedDirPath)
+	if err != nil {
+		return scripting_utilities.ScriptError{err.Error()}
+	}
+	if !sharedDir.IsDir() {
+		return scripting_utilities.ScriptError{sharedDirPath + " is not a directory"}
+	}
 
 	outputFolderPath := go_vars_helper.GOPATH + "/bin/" + appName
-    outputFilePath := outputFolderPath + "/" + appName + "-server"
+	outputFilePath := outputFolderPath + "/" + appName + "-server"
 
-    if verbose {
-        fmt.Println("Building executable from package: " + appDirPath + "/main")
-        fmt.Println("Output path: " + outputFilePath)
-    }
+	if verbose {
+		fmt.Println("Building executable from package: " + appDirPath + "/main")
+		fmt.Println("Output path: " + outputFilePath)
+	}
 
-    buildCommand := exec.Command(go_vars_helper.GOROOT + "/bin/go", "build", "-o", outputFilePath, appDirPath + "/main/main.go")
-    buildCommand.Stdout = os.Stdout
-    buildCommand.Stderr = os.Stderr
-    err = buildCommand.Run()
-    if err != nil {
-        return scripting_utilities.ScriptError{"Build command failed with: " + err.Error()}
-    }
+	buildCommand := exec.Command(go_vars_helper.GOROOT+"/bin/go", "build", "-o", outputFilePath, "main/main.go")
+	buildCommand.Dir = appDirPath
+	buildCommand.Stdout = os.Stdout
+	buildCommand.Stderr = os.Stderr
+	err = buildCommand.Run()
+	if err != nil {
+		return scripting_utilities.ScriptError{"Build command failed with: " + err.Error()}
+	}
 
-    if shouldRunAfterBuilding {
-        runCommand := exec.Command(outputFilePath)
-        runCommand.Env = os.Environ()
-        runCommand.Env = append(runCommand.Env, "app_environment="+appEnv)
-        runCommand.Env = append(runCommand.Env, "app_name="+appName)
-        runCommand.Env = append(runCommand.Env, "app_dir_path="+appDirPath)
-        runCommand.Stdout = os.Stdout
-        runCommand.Stderr = os.Stderr
-        err = runCommand.Run()
-        if err != nil {
-        	return scripting_utilities.ScriptError{ "Run command failed with: " + err.Error()}
-        }
-    }
+	if shouldRunAfterBuilding {
+		runCommand := exec.Command(outputFilePath)
+		runCommand.Env = os.Environ()
+		runCommand.Env = append(runCommand.Env, "app_environment="+appEnv)
+		runCommand.Env = append(runCommand.Env, "app_name="+appName)
+		runCommand.Env = append(runCommand.Env, "app_dir_path="+appDirPath)
+		runCommand.Env = append(runCommand.Env, "shared_dir_path="+sharedDirPath)
+		runCommand.Stdout = os.Stdout
+		runCommand.Stderr = os.Stderr
+		err = runCommand.Run()
+		if err != nil {
+			return scripting_utilities.ScriptError{"Run command failed with: " + err.Error()}
+		}
+	}
 
-    return nil
+	return nil
 }

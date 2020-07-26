@@ -12,6 +12,7 @@ import (
     "github.com/spacetimi/timi_shared_server/code/core/services/metadata_service/metadata_factory"
     "github.com/spacetimi/timi_shared_server/code/core/services/metadata_service/metadata_typedefs"
     "github.com/spacetimi/timi_shared_server/utils/logger"
+    "golang.org/x/net/context"
     "html/template"
     "io"
     "net/http"
@@ -217,7 +218,7 @@ func showMetadataOverviewPage(httpResponseWriter http.ResponseWriter, request *h
         CurrentVersions: metadata_service.Instance().GetCurrentVersions(space),
         CurrentVersionsCSV: strings.Join(metadata_service.Instance().GetCurrentVersions(space), ","),
         AllVersions: allVersionsSorted,
-        IsUpToDate: metadata_service.CheckIfMetadataUpToDate(space),
+        IsUpToDate: metadata_service.CheckIfMetadataUpToDate(space, request.Context()),
     }
 
     // Check post arguments
@@ -235,14 +236,14 @@ func showMetadataOverviewPage(httpResponseWriter http.ResponseWriter, request *h
     if newCurrentVersionsCSV != "" {
         var messageToShow string
 
-        metadataUpToDate := metadata_service.CheckIfMetadataUpToDate(space)
+        metadataUpToDate := metadata_service.CheckIfMetadataUpToDate(space, request.Context())
         if !metadataUpToDate {
             messageToShow = "Metadata not up to date. Please hit Refresh and try again."
             pageObject.HasError = true
             pageObject.ErrorString = "stale metadata for space: " + space.String()
 
         } else {
-            err := updateNewCurrentVersions(space, newCurrentVersionsCSV)
+            err := updateNewCurrentVersions(space, newCurrentVersionsCSV, request.Context())
             messageToShow = "Successfully updated current versions."
             if err != nil {
                 messageToShow = "Something went wrong updating current versions."
@@ -280,7 +281,7 @@ func showMetadataOverviewPage(httpResponseWriter http.ResponseWriter, request *h
     }
 }
 
-func updateNewCurrentVersions(space metadata_typedefs.MetadataSpace, newCurrentVersionsCSV string) error {
+func updateNewCurrentVersions(space metadata_typedefs.MetadataSpace, newCurrentVersionsCSV string, ctx context.Context) error {
     newCurrentVersions := strings.Split(strings.Replace(newCurrentVersionsCSV, " ", "", -1), ",")
 
     defer metadata_service.ReleaseInstanceRW()
@@ -289,7 +290,7 @@ func updateNewCurrentVersions(space metadata_typedefs.MetadataSpace, newCurrentV
         return err
     }
 
-    err = metadata_service.MarkMetadataAsUpdated(space)
+    err = metadata_service.MarkMetadataAsUpdated(space, ctx)
     if err != nil {
         return errors.New("error marking metadata as updated: " + err.Error())
     }
@@ -303,7 +304,7 @@ func updateNewCurrentVersions(space metadata_typedefs.MetadataSpace, newCurrentV
 
 func showMetadataCreateNewVersionPage(httpResponseWriter http.ResponseWriter, request *http.Request, adminPageObject AdminPageObject, space metadata_typedefs.MetadataSpace) {
 
-    metadataUpToDate := metadata_service.CheckIfMetadataUpToDate(space)
+    metadataUpToDate := metadata_service.CheckIfMetadataUpToDate(space, request.Context())
     if !metadataUpToDate {
         simpleMessagePageObject := AdminSimpleMessageObject{
             AdminPageObject: adminPageObject,
@@ -360,7 +361,7 @@ func showMetadataCreateNewVersionPage(httpResponseWriter http.ResponseWriter, re
         return
     }
 
-    err = metadata_service.MarkMetadataAsUpdated(space)
+    err = metadata_service.MarkMetadataAsUpdated(space, request.Context())
     if err != nil {
         simpleMessagePageObject := AdminSimpleMessageObject{
             AdminPageObject: adminPageObject,
@@ -431,7 +432,7 @@ func showMetadataEditVersionPage(httpResponseWriter http.ResponseWriter, request
 
     pageObject.Version = version.String()
 
-    metadataUpToDate := metadata_service.CheckIfMetadataUpToDate(space)
+    metadataUpToDate := metadata_service.CheckIfMetadataUpToDate(space, request.Context())
     if !metadataUpToDate {
         simpleMessagePageObject := AdminSimpleMessageObject{
             AdminPageObject: pageObject.AdminPageObject,
@@ -696,7 +697,7 @@ func showMetadataUploadPage(httpResponseWriter http.ResponseWriter, request *htt
         return
     }
 
-    metadataUpToDate := metadata_service.CheckIfMetadataUpToDate(space)
+    metadataUpToDate := metadata_service.CheckIfMetadataUpToDate(space, request.Context())
     if !metadataUpToDate {
         simpleMessagePageObject := AdminSimpleMessageObject{
             AdminPageObject: adminPageObject,
@@ -789,7 +790,7 @@ func showMetadataUploadPage(httpResponseWriter http.ResponseWriter, request *htt
         return
     }
 
-    err = metadata_service.MarkMetadataAsUpdated(space)
+    err = metadata_service.MarkMetadataAsUpdated(space, request.Context())
     if err != nil {
          simpleMessagePageObject := AdminSimpleMessageObject{
             AdminPageObject: adminPageObject,
@@ -852,7 +853,7 @@ func showMetadataUploadAllPage(httpResponseWriter http.ResponseWriter, request *
         return
     }
 
-    metadataUpToDate := metadata_service.CheckIfMetadataUpToDate(space)
+    metadataUpToDate := metadata_service.CheckIfMetadataUpToDate(space, request.Context())
     if !metadataUpToDate {
         simpleMessagePageObject := AdminSimpleMessageObject{
             AdminPageObject: adminPageObject,
@@ -977,7 +978,7 @@ func showMetadataUploadAllPage(httpResponseWriter http.ResponseWriter, request *
         metadataItemKeys = append(metadataItemKeys, metadataItem.GetKey())
     }
 
-    err = metadata_service.MarkMetadataAsUpdated(space)
+    err = metadata_service.MarkMetadataAsUpdated(space, request.Context())
     if err != nil {
         hasErrors = true
         errorList = append(errorList, "error marking metadata as updated: " +
