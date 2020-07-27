@@ -34,6 +34,9 @@ func ReadJsonSecret(secretName string, secretSubkey string) (string, error) {
 
 func ReadSecret(secretName string) (string, error) {
 	session, err := GetNewDefaultSession()
+	if err != nil {
+		return "", errors.New("error getting aws-session")
+	}
 
 	//Create a Secrets Manager client
 	svc := secretsmanager.New(session)

@@ -42,12 +42,7 @@ func (mf *MetadataFetcherS3) GetMetadataJsonByKey(key string, version string) (s
  */
 func (mf *MetadataFetcherS3) SetMetadataJsonByKey(key string, metadataJson string, version string) error {
 
-	awsSession, err := aws_helper.GetNewDefaultSession()
-	if err != nil {
-		return errors.New("error creating aws session: " + err.Error())
-	}
-
-	err = aws_helper.UploadToS3(awsSession, []byte(metadataJson), mf.adminS3BucketName, "metadata/"+version+"/"+key+".json")
+	err := aws_helper.UploadToS3([]byte(metadataJson), mf.adminS3BucketName, "metadata/"+version+"/"+key+".json")
 	if err != nil {
 		return errors.New("error uploading metadata item: " + err.Error())
 	}
@@ -118,12 +113,7 @@ func (mf *MetadataFetcherS3) SetMetadataManifestForVersion(manifest *metadata_ty
 		return errors.New("error serializing new manifest|error=" + err.Error())
 	}
 
-	awsSession, err := aws_helper.GetNewDefaultSession()
-	if err != nil {
-		return errors.New("error creating aws session: " + err.Error())
-	}
-
-	err = aws_helper.UploadToS3(awsSession, manifestJson, mf.adminS3BucketName, "metadata/"+version+"/MetadataManifest.json")
+	err = aws_helper.UploadToS3(manifestJson, mf.adminS3BucketName, "metadata/"+version+"/MetadataManifest.json")
 	if err != nil {
 		return errors.New("error uploading metadata manifest: " + err.Error())
 	}
@@ -136,12 +126,8 @@ func (mf *MetadataFetcherS3) SetMetadataManifestForVersion(manifest *metadata_ty
  */
 func (mf *MetadataFetcherS3) SetMetadataVersionList(mvl *metadata_typedefs.MetadataVersionList) error {
 
-	awsSession, err := aws_helper.GetNewDefaultSession()
-	if err != nil {
-		return errors.New("error creating aws session: " + err.Error())
-	}
-
 	var bytes []byte
+	var err error
 
 	if config.GetEnvironmentConfiguration().AppEnvironment == config.PRODUCTION {
 		bytes, err = json.Marshal(mvl)
@@ -152,7 +138,7 @@ func (mf *MetadataFetcherS3) SetMetadataVersionList(mvl *metadata_typedefs.Metad
 		return errors.New("error serializing metadata version list: " + err.Error())
 	}
 
-	err = aws_helper.UploadToS3(awsSession, bytes, mf.adminS3BucketName, "metadata/MetadataVersionList.json")
+	err = aws_helper.UploadToS3(bytes, mf.adminS3BucketName, "metadata/MetadataVersionList.json")
 	if err != nil {
 		return errors.New("error uploading metadata version list: " + err.Error())
 	}
