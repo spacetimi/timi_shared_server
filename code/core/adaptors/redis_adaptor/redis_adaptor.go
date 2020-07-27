@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/spacetimi/timi_shared_server/code/config"
+	"github.com/spacetimi/timi_shared_server/utils/logger"
 )
 
 var _client *redis.Client
@@ -13,18 +15,24 @@ var _client *redis.Client
 var EXPIRATION_DEFAULT time.Duration = 48 * time.Hour
 
 type Config struct {
-	RedisURL    string
-	RedisPasswd string
+	RedisURL       string
+	PasswordConfig config.PasswordConfig
 }
 
 func (cfg *Config) OnConfigLoaded() {
-	// TODO: Replace passwords
+	// TODO: Nothing to do
 }
 
 func Initialize(cfg Config) {
+	passwd, err := cfg.PasswordConfig.GetPassword()
+	if err != nil {
+		logger.LogError("error getting redis password" +
+			"|error=" + err.Error())
+	}
+
 	_client = redis.NewClient(&redis.Options{
 		Addr:     cfg.RedisURL,
-		Password: cfg.RedisPasswd,
+		Password: passwd,
 		DB:       0, // use default DB
 	})
 }
