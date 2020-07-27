@@ -5,6 +5,10 @@ type IAppInitializer interface {
 	AppInit() error
 }
 
-type RequiredServices struct {
+type RequiredServicesConfig struct {
 	Services []string
+}
+
+func (rsc *RequiredServicesConfig) OnConfigLoaded() {
+	// Nothing to do yet
 }

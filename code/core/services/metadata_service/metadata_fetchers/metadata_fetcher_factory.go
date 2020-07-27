@@ -13,7 +13,7 @@ func NewMetadataFetcher(metadataSpace metadata_typedefs.MetadataSpace) metadata_
 		if config.GetEnvironmentConfiguration().SharedMetadataSourceURL == "local" {
 			fetcher = NewMetadataFetcherFilesystem(config.GetSharedMetadataFilesPath())
 		} else {
-			fetcher = NewMetadataFetcherS3(config.GetEnvironmentConfiguration().SharedMetadataSourceURL, config.GetEnvironmentConfiguration().AdminToolConfig.SharedMetadataS3BucketName, "")
+			fetcher = NewMetadataFetcherS3(config.GetEnvironmentConfiguration().SharedMetadataSourceURL, config.GetEnvironmentConfiguration().AdminToolConfig.SharedMetadataS3BucketName)
 		}
 	}
 
@@ -21,7 +21,7 @@ func NewMetadataFetcher(metadataSpace metadata_typedefs.MetadataSpace) metadata_
 		if config.GetEnvironmentConfiguration().AppMetadataSourceURL == "local" {
 			fetcher = NewMetadataFetcherFilesystem(config.GetAppMetadataFilesPath())
 		} else {
-			fetcher = NewMetadataFetcherS3(config.GetEnvironmentConfiguration().AppMetadataSourceURL, config.GetEnvironmentConfiguration().AdminToolConfig.AppMetadataS3BucketName, "passman-dev")
+			fetcher = NewMetadataFetcherS3(config.GetEnvironmentConfiguration().AppMetadataSourceURL, config.GetEnvironmentConfiguration().AdminToolConfig.AppMetadataS3BucketName)
 		}
 	}
 

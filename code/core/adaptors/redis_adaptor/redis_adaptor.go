@@ -3,8 +3,9 @@ package redis_adaptor
 import (
 	"context"
 	"errors"
-	"github.com/go-redis/redis/v8"
 	"time"
+
+	"github.com/go-redis/redis/v8"
 )
 
 var _client *redis.Client
@@ -12,15 +13,19 @@ var _client *redis.Client
 var EXPIRATION_DEFAULT time.Duration = 48 * time.Hour
 
 type Config struct {
-	RedisURL string
+	RedisURL    string
 	RedisPasswd string
 }
 
+func (cfg *Config) OnConfigLoaded() {
+	// TODO: Replace passwords
+}
+
 func Initialize(cfg Config) {
-	_client = redis.NewClient(&redis.Options {
+	_client = redis.NewClient(&redis.Options{
 		Addr:     cfg.RedisURL,
 		Password: cfg.RedisPasswd,
-		DB:       0,  // use default DB
+		DB:       0, // use default DB
 	})
 }
 

@@ -16,7 +16,7 @@ func SharedInit(appInitializer IAppInitializer) {
 
 	config.Initialize(appInitializer.AppName())
 
-	var reqdServices *RequiredServices
+	var reqdServices RequiredServicesConfig
 	reqdServicesFilePath := config.GetAppConfigFilesPath() + "/services/required_services.json"
 	err := config.ReadConfigFile(reqdServicesFilePath, &reqdServices)
 	if err != nil {
@@ -45,7 +45,7 @@ func initializeService(serviceName string) {
 	case "mongo_adaptor":
 		configObject := mongo_adaptor.Config{}
 		readConfigForService(serviceName, &configObject)
-		mongo_adaptor.Initialize(configObject)
+		mongo_adaptor.Initialize(&configObject)
 
 	case "redis_adaptor":
 		configObject := redis_adaptor.Config{}
@@ -67,10 +67,10 @@ func initializeService(serviceName string) {
 	}
 }
 
-func readConfigForService(serviceName string, configObject interface{}) {
+func readConfigForService(serviceName string, configObject config.IConfig) {
 	configFilePath := config.GetAppConfigFilesPath() + "/services/" + serviceName + "/" +
 		strings.ToLower(config.GetEnvironmentConfiguration().AppEnvironment.String()) + ".json"
-	err := config.ReadConfigFile(configFilePath, &configObject)
+	err := config.ReadConfigFile(configFilePath, configObject)
 	if err != nil {
 		logger.LogFatal("error reading config for service" +
 			"|service name=" + serviceName +

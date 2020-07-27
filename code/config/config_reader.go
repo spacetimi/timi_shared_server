@@ -6,11 +6,17 @@ import (
 	"github.com/spacetimi/timi_shared_server/utils/file_utils"
 )
 
-func ReadConfigFile(filePath string, configObject interface{}) error {
+type IConfig interface {
+	OnConfigLoaded()
+}
+
+func ReadConfigFile(filePath string, configObject IConfig) error {
 	err := file_utils.ReadJsonFileIntoJsonObject(filePath, configObject)
 	if err != nil {
 		return errors.New("error reading config file: " + err.Error())
 	}
+
+	configObject.OnConfigLoaded()
 
 	return nil
 }
