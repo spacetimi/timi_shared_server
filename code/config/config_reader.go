@@ -3,7 +3,7 @@ package config
 import (
 	"errors"
 
-	"github.com/spacetimi/timi_shared_server/utils/file_utils"
+	"github.com/spacetimi/timi_shared_server/v2/utils/file_utils"
 )
 
 type IConfig interface {

@@ -5,7 +5,7 @@ import (
 	"html/template"
 	"io"
 
-	"github.com/spacetimi/timi_shared_server/utils/logger"
+	"github.com/spacetimi/timi_shared_server/v2/utils/logger"
 )
 
 type TemplatedWriter struct {

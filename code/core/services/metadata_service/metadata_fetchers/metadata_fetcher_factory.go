@@ -1,9 +1,9 @@
 package metadata_fetchers
 
 import (
-	"github.com/spacetimi/timi_shared_server/code/config"
-	"github.com/spacetimi/timi_shared_server/code/core/services/metadata_service/metadata_typedefs"
-	"github.com/spacetimi/timi_shared_server/utils/logger"
+	"github.com/spacetimi/timi_shared_server/v2/code/config"
+	"github.com/spacetimi/timi_shared_server/v2/code/core/services/metadata_service/metadata_typedefs"
+	"github.com/spacetimi/timi_shared_server/v2/utils/logger"
 )
 
 func NewMetadataFetcher(metadataSpace metadata_typedefs.MetadataSpace) metadata_typedefs.IMetadataFetcher {

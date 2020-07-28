@@ -2,36 +2,43 @@ package config
 
 import (
 	"encoding/json"
-	"github.com/spacetimi/timi_shared_server/utils/logger"
 	"os"
 	"strings"
+
+	"github.com/spacetimi/timi_shared_server/v2/utils/logger"
 )
 
 type AppEnvironment_t int
+
 const (
 	LOCAL = iota
 	TEST
 	STAGING
 	PRODUCTION
 )
+
 func (appEnvironment AppEnvironment_t) String() string {
 	switch appEnvironment {
-	case LOCAL: return "Local"
-	case TEST: return "Test"
-	case STAGING: return "Staging"
-	case PRODUCTION: return "Production"
+	case LOCAL:
+		return "Local"
+	case TEST:
+		return "Test"
+	case STAGING:
+		return "Staging"
+	case PRODUCTION:
+		return "Production"
 	}
 	return ""
 }
 
 type EnvironmentConfiguration struct {
-	AppEnvironment AppEnvironment_t
-	Port int
+	AppEnvironment   AppEnvironment_t
+	Port             int
 	ApiServerBaseURL string
 
 	// MetaData config
-	SharedMetadataSourceURL string
-	AppMetadataSourceURL string
+	SharedMetadataSourceURL        string
+	AppMetadataSourceURL           string
 	MetadataAutoUpdaterPollSeconds int
 
 	// Admin tool config
@@ -40,16 +47,16 @@ type EnvironmentConfiguration struct {
 
 type AdminToolConfiguration struct {
 	SharedMetadataS3BucketName string
-	AppMetadataS3BucketName string
+	AppMetadataS3BucketName    string
 }
 
 func readEnvironmentConfiguration(pathToConfigFiles string, appEnvString string) *EnvironmentConfiguration {
 
 	switch appEnvString {
-	case "Local": 		// OK
-	case "Test": 		// OK
-	case "Staging": 	// OK
-	case "Production": 	// OK
+	case "Local": // OK
+	case "Test": // OK
+	case "Staging": // OK
+	case "Production": // OK
 	default:
 		panic("Invalid app environment: " + appEnvString)
 	}
@@ -64,8 +71,8 @@ func readEnvironmentConfiguration(pathToConfigFiles string, appEnvString string)
 		err := environmentConfigFile.Close()
 		if err != nil {
 			logger.LogError("error closing config file" +
-							"|file path=" + environmentConfigFilePath +
-							"|error=" + err.Error())
+				"|file path=" + environmentConfigFilePath +
+				"|error=" + err.Error())
 		}
 	}()
 
@@ -74,8 +81,8 @@ func readEnvironmentConfiguration(pathToConfigFiles string, appEnvString string)
 	err = decoder.Decode(&environmentConfiguration)
 	if err != nil {
 		logger.LogFatal("error decoding configuration file" +
-						"|file path=" + environmentConfigFilePath +
-						"|error=" + err.Error())
+			"|file path=" + environmentConfigFilePath +
+			"|error=" + err.Error())
 		return nil
 	}
 

@@ -3,13 +3,13 @@ package shared_init
 import (
 	"strings"
 
-	"github.com/spacetimi/timi_shared_server/code/config"
-	"github.com/spacetimi/timi_shared_server/code/core/adaptors/mongo_adaptor"
-	"github.com/spacetimi/timi_shared_server/code/core/adaptors/redis_adaptor"
-	"github.com/spacetimi/timi_shared_server/code/core/services/identity_service"
-	"github.com/spacetimi/timi_shared_server/code/core/services/metadata_service"
-	"github.com/spacetimi/timi_shared_server/code/core/services/metadata_service/metadata_factory"
-	"github.com/spacetimi/timi_shared_server/utils/logger"
+	"github.com/spacetimi/timi_shared_server/v2/code/config"
+	"github.com/spacetimi/timi_shared_server/v2/code/core/adaptors/mongo_adaptor"
+	"github.com/spacetimi/timi_shared_server/v2/code/core/adaptors/redis_adaptor"
+	"github.com/spacetimi/timi_shared_server/v2/code/core/services/identity_service"
+	"github.com/spacetimi/timi_shared_server/v2/code/core/services/metadata_service"
+	"github.com/spacetimi/timi_shared_server/v2/code/core/services/metadata_service/metadata_factory"
+	"github.com/spacetimi/timi_shared_server/v2/utils/logger"
 )
 
 func SharedInit(appInitializer IAppInitializer) {

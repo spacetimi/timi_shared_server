@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/spacetimi/timi_shared_server/utils/logger"
+	"github.com/spacetimi/timi_shared_server/v2/utils/logger"
 )
 
 func DoesFileOrDirectoryExist(path string) bool {

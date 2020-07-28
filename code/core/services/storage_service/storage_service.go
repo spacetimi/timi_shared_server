@@ -8,11 +8,11 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/spacetimi/timi_shared_server/code/core/adaptors/mongo_adaptor"
-	"github.com/spacetimi/timi_shared_server/code/core/adaptors/redis_adaptor"
-	"github.com/spacetimi/timi_shared_server/code/core/services/storage_service/storage_typedefs"
-	"github.com/spacetimi/timi_shared_server/utils/logger"
-	"github.com/spacetimi/timi_shared_server/utils/reflection_utils"
+	"github.com/spacetimi/timi_shared_server/v2/code/core/adaptors/mongo_adaptor"
+	"github.com/spacetimi/timi_shared_server/v2/code/core/adaptors/redis_adaptor"
+	"github.com/spacetimi/timi_shared_server/v2/code/core/services/storage_service/storage_typedefs"
+	"github.com/spacetimi/timi_shared_server/v2/utils/logger"
+	"github.com/spacetimi/timi_shared_server/v2/utils/reflection_utils"
 )
 
 func GetBlobByPrimaryKeys(outBlobPtr storage_typedefs.IBlob,

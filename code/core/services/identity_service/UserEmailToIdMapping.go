@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 
-	"github.com/spacetimi/timi_shared_server/code/config"
-	"github.com/spacetimi/timi_shared_server/code/core/services/storage_service"
-	"github.com/spacetimi/timi_shared_server/code/core/services/storage_service/storage_typedefs"
+	"github.com/spacetimi/timi_shared_server/v2/code/config"
+	"github.com/spacetimi/timi_shared_server/v2/code/core/services/storage_service"
+	"github.com/spacetimi/timi_shared_server/v2/code/core/services/storage_service/storage_typedefs"
 )
 
 const kVersion = 1

@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/spacetimi/timi_shared_server/code/config"
-	"github.com/spacetimi/timi_shared_server/code/core/services/metadata_service/metadata_typedefs"
-	"github.com/spacetimi/timi_shared_server/utils/aws_helper"
-	"github.com/spacetimi/timi_shared_server/utils/file_utils"
-	"github.com/spacetimi/timi_shared_server/utils/logger"
+	"github.com/spacetimi/timi_shared_server/v2/code/config"
+	"github.com/spacetimi/timi_shared_server/v2/code/core/services/metadata_service/metadata_typedefs"
+	"github.com/spacetimi/timi_shared_server/v2/utils/aws_helper"
+	"github.com/spacetimi/timi_shared_server/v2/utils/file_utils"
+	"github.com/spacetimi/timi_shared_server/v2/utils/logger"
 )
 
 type MetadataFetcherS3 struct { // Implements IMetadataFetcher

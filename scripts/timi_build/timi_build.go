@@ -7,8 +7,8 @@ import (
 	"os/exec"
 	"sync"
 
-	"github.com/spacetimi/timi_shared_server/scripts/scripting_utilities"
-	"github.com/spacetimi/timi_shared_server/utils/go_vars_helper"
+	"github.com/spacetimi/timi_shared_server/v2/scripts/scripting_utilities"
+	"github.com/spacetimi/timi_shared_server/v2/utils/go_vars_helper"
 )
 
 func usage() {

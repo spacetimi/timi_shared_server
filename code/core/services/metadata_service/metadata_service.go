@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/spacetimi/timi_shared_server/code/core"
-	"github.com/spacetimi/timi_shared_server/code/core/services/metadata_service/metadata_typedefs"
-	"github.com/spacetimi/timi_shared_server/utils/logger"
 	"sync"
+
+	"github.com/spacetimi/timi_shared_server/v2/code/core"
+	"github.com/spacetimi/timi_shared_server/v2/code/core/services/metadata_service/metadata_typedefs"
+	"github.com/spacetimi/timi_shared_server/v2/utils/logger"
 )
 
 type MetadataService struct {
@@ -16,7 +17,7 @@ type MetadataService struct {
 }
 
 func Initialize() {
-    // This is during Initialization. No need to take mutex lock
+	// This is during Initialization. No need to take mutex lock
 	instance = createInstance()
 	go startAutoUpdater(metadata_typedefs.METADATA_SPACE_SHARED, context.Background())
 	go startAutoUpdater(metadata_typedefs.METADATA_SPACE_APP, context.Background())
@@ -25,7 +26,7 @@ func Initialize() {
 func createInstance() *MetadataService {
 	newInstance := &MetadataService{}
 	newInstance.sharedMDServiceSpace = newMetadataServiceSpace(metadata_typedefs.METADATA_SPACE_SHARED)
-	newInstance.appMDServiceSpace    = newMetadataServiceSpace(metadata_typedefs.METADATA_SPACE_APP)
+	newInstance.appMDServiceSpace = newMetadataServiceSpace(metadata_typedefs.METADATA_SPACE_APP)
 
 	return newInstance
 }
@@ -34,7 +35,7 @@ var instance *MetadataService
 var mutexForInstance sync.RWMutex
 
 func Instance() *MetadataService {
-    mutexForInstance.RLock()
+	mutexForInstance.RLock()
 	defer mutexForInstance.RUnlock()
 
 	if instance == nil {
@@ -60,6 +61,7 @@ func InstanceRW() *MetadataService {
 	instance = createInstance()
 	return instance
 }
+
 /**
  * MUST be called after taking an InstanceRW
  * Failing to call this will lead to deadlocks
@@ -69,11 +71,10 @@ func ReleaseInstanceRW() {
 	logger.LogInfo("Released write lock on metadata service instance")
 }
 
-
 func (ms *MetadataService) GetCurrentVersions(space metadata_typedefs.MetadataSpace) []string {
-    msa := ms.getMetadataServiceSpace(space)
+	msa := ms.getMetadataServiceSpace(space)
 
-    return msa.mdVersionList.CurrentVersions
+	return msa.mdVersionList.CurrentVersions
 }
 
 /**
@@ -86,13 +87,13 @@ func (ms *MetadataService) SetCurrentVersions(newCurrentVersionStrings []string,
 
 	var newCurrentVersions []*core.AppVersion
 	for _, versionString := range newCurrentVersionStrings {
-	    version, err := core.GetAppVersionFromString(versionString)
-	    if err != nil {
-	    	logger.LogError("Error parsing app version" +
-							"|metadata space=" + space.String() +
-	    					"|version string=" + versionString +
-	    					"|error=" + err.Error())
-	    	return errors.New("error parsing versions: " + err.Error())
+		version, err := core.GetAppVersionFromString(versionString)
+		if err != nil {
+			logger.LogError("Error parsing app version" +
+				"|metadata space=" + space.String() +
+				"|version string=" + versionString +
+				"|error=" + err.Error())
+			return errors.New("error parsing versions: " + err.Error())
 		}
 		newCurrentVersions = append(newCurrentVersions, version)
 	}
@@ -106,12 +107,12 @@ func (ms *MetadataService) SetCurrentVersions(newCurrentVersionStrings []string,
 	err := msa.setCurrentVersions(newCurrentVersions)
 	if err != nil {
 		logger.LogError("error updating current versions" +
-						"|metadata space=" + space.String() +
-						"|error=" + err.Error())
+			"|metadata space=" + space.String() +
+			"|error=" + err.Error())
 		return errors.New("couldn't update current versions: " + err.Error())
 	}
 
-    return nil
+	return nil
 }
 
 /**
@@ -127,9 +128,9 @@ func (ms *MetadataService) CreateNewVersion(newVersion *core.AppVersion, space m
 	err := msa.createNewVersion(newVersion, markAsCurrent)
 	if err != nil {
 		logger.LogWarning("error creating new metadata version" +
-						  "|metadata space=" + space.String() +
-						  "|new version=" + newVersion.String() +
-						  "|error=" + err.Error())
+			"|metadata space=" + space.String() +
+			"|new version=" + newVersion.String() +
+			"|error=" + err.Error())
 		return err
 	}
 
@@ -233,25 +234,25 @@ func (ms *MetadataService) GetMetadataItem(itemPtr metadata_typedefs.IMetadataIt
 
 	if err != nil {
 		logger.LogError("Could not find metadata|metadata_space=" + itemPtr.GetMetadataSpace().String() +
-						"|metadata_key=" + itemPtr.GetKey() +
-						"|version=" + version.String() +
-						"|error=" + err.Error())
+			"|metadata_key=" + itemPtr.GetKey() +
+			"|version=" + version.String() +
+			"|error=" + err.Error())
 		return errors.New("failed to find metadata")
 	}
 
 	if metadataJson == "" {
 		logger.LogError("Could not find metadata|metadata_space=" + string(itemPtr.GetMetadataSpace()) +
-			            "|metadata_key=" + itemPtr.GetKey() +
-						"|version=" + version.String())
+			"|metadata_key=" + itemPtr.GetKey() +
+			"|version=" + version.String())
 		return errors.New("failed to find metadata")
 	}
 
 	err = json.Unmarshal([]byte(metadataJson), itemPtr)
 	if err != nil {
 		logger.LogError("Error deserializing metadata json|metadata_space=" + string(itemPtr.GetMetadataSpace()) +
-			            "|metadata_key=" + itemPtr.GetKey() +
-						"|version=" + version.String() +
-			            "|error=" + err.Error())
+			"|metadata_key=" + itemPtr.GetKey() +
+			"|version=" + version.String() +
+			"|error=" + err.Error())
 		return errors.New("failed deserializing metadata")
 	}
 
@@ -286,9 +287,9 @@ func (ms *MetadataService) SetMetadataItem(itemPtr metadata_typedefs.IMetadataIt
 
 	if err != nil {
 		logger.LogError("error saving metadata item" +
-						"|version=" + version.String() +
-						"|metadata key=" + itemPtr.GetKey() +
-						"|error=" + err.Error())
+			"|version=" + version.String() +
+			"|metadata key=" + itemPtr.GetKey() +
+			"|error=" + err.Error())
 		return errors.New("error saving metadata item: " + err.Error())
 	}
 
@@ -299,12 +300,13 @@ func (ms *MetadataService) getMetadataServiceSpace(space metadata_typedefs.Metad
 	var msa *MetadataServiceSpace
 
 	switch space {
-	case metadata_typedefs.METADATA_SPACE_SHARED: msa = ms.sharedMDServiceSpace
-	case metadata_typedefs.METADATA_SPACE_APP: msa = ms.appMDServiceSpace
+	case metadata_typedefs.METADATA_SPACE_SHARED:
+		msa = ms.sharedMDServiceSpace
+	case metadata_typedefs.METADATA_SPACE_APP:
+		msa = ms.appMDServiceSpace
 	default:
 		logger.LogError("undefined metadata space|space=" + space.String())
 	}
 
 	return msa
 }
-

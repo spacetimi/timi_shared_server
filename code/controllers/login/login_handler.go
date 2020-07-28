@@ -1,22 +1,23 @@
 package login
 
 import (
-    "encoding/json"
-    "fmt"
-    "github.com/spacetimi/timi_shared_server/code/config"
-	"github.com/spacetimi/timi_shared_server/code/controllers/shared_routes"
-	"github.com/spacetimi/timi_shared_server/code/core/controller"
-    "github.com/spacetimi/timi_shared_server/code/core/services/metadata_service"
-    "github.com/spacetimi/timi_shared_server/code/core/services/metadata_service/metadata_typedefs"
-    "github.com/spacetimi/timi_shared_server/utils/logger"
-    "net/http"
+	"encoding/json"
+	"fmt"
+	"net/http"
+
+	"github.com/spacetimi/timi_shared_server/v2/code/config"
+	"github.com/spacetimi/timi_shared_server/v2/code/controllers/shared_routes"
+	"github.com/spacetimi/timi_shared_server/v2/code/core/controller"
+	"github.com/spacetimi/timi_shared_server/v2/code/core/services/metadata_service"
+	"github.com/spacetimi/timi_shared_server/v2/code/core/services/metadata_service/metadata_typedefs"
+	"github.com/spacetimi/timi_shared_server/v2/utils/logger"
 )
 
-type LoginHandler struct {      // Implements IRouteHandler
+type LoginHandler struct { // Implements IRouteHandler
 }
 
 func (lh *LoginHandler) Routes() []controller.Route {
-	return []controller.Route {
+	return []controller.Route{
 		controller.NewRoute(shared_routes.Login, []controller.RequestMethodType{controller.POST}),
 	}
 }
@@ -33,23 +34,23 @@ func processLoginRequest(request *http.Request) LoginResponse {
 
 	err := request.ParseForm()
 	if err != nil {
-		return LoginResponse{Success:false, ErrorMessage:"Badly formed login request: " + err.Error()}
+		return LoginResponse{Success: false, ErrorMessage: "Badly formed login request: " + err.Error()}
 	}
 
 	loginParams_json := request.Form.Get("login_params")
 	if len(loginParams_json) <= 0 {
-		return LoginResponse{Success:false, ErrorMessage:"No login params provided"}
+		return LoginResponse{Success: false, ErrorMessage: "No login params provided"}
 	}
 
 	loginParams := LoginRequestParams{}
 	err = json.Unmarshal([]byte(loginParams_json), &loginParams)
 	if err != nil {
-		return LoginResponse{Success:false, ErrorMessage:"Unable to deserialize login params json: " + err.Error()}
+		return LoginResponse{Success: false, ErrorMessage: "Unable to deserialize login params json: " + err.Error()}
 	}
 
 	loginRequest, err := NewLoginRequest(&loginParams)
 	if err != nil {
-		return LoginResponse{Success:false, ErrorMessage:"Unable to construct login request: " + err.Error()}
+		return LoginResponse{Success: false, ErrorMessage: "Unable to construct login request: " + err.Error()}
 	}
 
 	// TODO: krisa: Use Appversion in GetMetaDataItem()
@@ -66,5 +67,5 @@ func processLoginRequest(request *http.Request) LoginResponse {
 		logger.LogInfo("metadata not up to date")
 	}
 
-	return LoginResponse{Success:true, ErrorMessage:"", Body:"Successfully logged in to App: " + config.GetAppName()}
+	return LoginResponse{Success: true, ErrorMessage: "", Body: "Successfully logged in to App: " + config.GetAppName()}
 }

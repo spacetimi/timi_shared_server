@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/spacetimi/timi_shared_server/code/config"
-	"github.com/spacetimi/timi_shared_server/utils/logger"
-	"github.com/spacetimi/timi_shared_server/utils/reflection_utils"
+	"github.com/spacetimi/timi_shared_server/v2/code/config"
+	"github.com/spacetimi/timi_shared_server/v2/utils/logger"
+	"github.com/spacetimi/timi_shared_server/v2/utils/reflection_utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"

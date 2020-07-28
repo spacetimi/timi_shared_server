@@ -3,15 +3,16 @@ package login
 import (
 	"encoding/json"
 	"errors"
-	"github.com/spacetimi/timi_shared_server/code/core"
 	"strconv"
 	"strings"
+
+	"github.com/spacetimi/timi_shared_server/v2/code/core"
 )
 
 /****************************************/
 
 type LoginRequestParams struct {
-	DeviceUID int64
+	DeviceUID        int64
 	AppVersionString string
 }
 
@@ -48,7 +49,7 @@ func (loginRequestParams *LoginRequestParams) parse() (int64, int64, int64, erro
 /****************************************/
 
 type LoginRequest struct {
-	DeviceUID int64
+	DeviceUID  int64
 	AppVersion *core.AppVersion
 }
 
@@ -68,8 +69,8 @@ func NewLoginRequest(params *LoginRequestParams) (*LoginRequest, error) {
 /****************************************/
 
 type LoginResponse struct {
-	Success bool
-	Body string
+	Success      bool
+	Body         string
 	ErrorMessage string
 }
 
@@ -82,4 +83,3 @@ func (loginResponse *LoginResponse) String() string {
 }
 
 /****************************************/
-

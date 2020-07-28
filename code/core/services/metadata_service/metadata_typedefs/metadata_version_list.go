@@ -2,11 +2,12 @@ package metadata_typedefs
 
 import (
 	"errors"
-	"github.com/spacetimi/timi_shared_server/code/core"
+
+	"github.com/spacetimi/timi_shared_server/v2/code/core"
 )
 
 type MetadataVersionList struct {
-	Versions []string
+	Versions        []string
 	CurrentVersions []string
 
 	_versionsAsMap map[string]bool
@@ -34,9 +35,9 @@ func (mvl *MetadataVersionList) IsVersionCurrent(version *core.AppVersion) bool 
 }
 
 func (mvl *MetadataVersionList) CreateNewVersion(version *core.AppVersion, markAsCurrent bool) error {
-    _, ok := mvl._versionsAsMap[version.String()]
-    if ok {
-    	return errors.New("duplicate version")
+	_, ok := mvl._versionsAsMap[version.String()]
+	if ok {
+		return errors.New("duplicate version")
 	}
 
 	mvl.Versions = append(mvl.Versions, version.String())
@@ -50,21 +51,20 @@ func (mvl *MetadataVersionList) CreateNewVersion(version *core.AppVersion, markA
 }
 
 func (mvl *MetadataVersionList) GetLatestVersionDefined() (*core.AppVersion, error) {
-    var latestVersion *core.AppVersion
-    for _, versionString := range mvl.Versions {
-        version, err := core.GetAppVersionFromString(versionString)
-        if err != nil {
-        	continue
+	var latestVersion *core.AppVersion
+	for _, versionString := range mvl.Versions {
+		version, err := core.GetAppVersionFromString(versionString)
+		if err != nil {
+			continue
 		}
-        if latestVersion == nil ||
-           latestVersion.Compare(version) < 0 {
-        	latestVersion = version
+		if latestVersion == nil ||
+			latestVersion.Compare(version) < 0 {
+			latestVersion = version
 		}
 	}
 
-    if latestVersion == nil {
-    	return nil, errors.New("couldn't find latest version")
+	if latestVersion == nil {
+		return nil, errors.New("couldn't find latest version")
 	}
-    return latestVersion, nil
+	return latestVersion, nil
 }
-

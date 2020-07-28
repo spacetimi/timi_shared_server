@@ -3,8 +3,8 @@ package config
 import (
 	"os"
 
-	"github.com/spacetimi/timi_shared_server/utils/go_vars_helper"
-	"github.com/spacetimi/timi_shared_server/utils/logger"
+	"github.com/spacetimi/timi_shared_server/v2/utils/go_vars_helper"
+	"github.com/spacetimi/timi_shared_server/v2/utils/logger"
 )
 
 var _appName string

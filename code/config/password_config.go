@@ -3,7 +3,7 @@ package config
 import (
 	"errors"
 
-	"github.com/spacetimi/timi_shared_server/utils/aws_helper"
+	"github.com/spacetimi/timi_shared_server/v2/utils/aws_helper"
 )
 
 type PasswordConfig struct {

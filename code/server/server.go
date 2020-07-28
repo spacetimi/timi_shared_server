@@ -7,12 +7,12 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/spacetimi/timi_shared_server/code/config"
-	"github.com/spacetimi/timi_shared_server/code/controllers/admin"
-	"github.com/spacetimi/timi_shared_server/code/controllers/login"
-	"github.com/spacetimi/timi_shared_server/code/controllers/server_status"
-	"github.com/spacetimi/timi_shared_server/code/core/controller"
-	"github.com/spacetimi/timi_shared_server/utils/logger"
+	"github.com/spacetimi/timi_shared_server/v2/code/config"
+	"github.com/spacetimi/timi_shared_server/v2/code/controllers/admin"
+	"github.com/spacetimi/timi_shared_server/v2/code/controllers/login"
+	"github.com/spacetimi/timi_shared_server/v2/code/controllers/server_status"
+	"github.com/spacetimi/timi_shared_server/v2/code/core/controller"
+	"github.com/spacetimi/timi_shared_server/v2/utils/logger"
 )
 
 var _router *mux.Router
