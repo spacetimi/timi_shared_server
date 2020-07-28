@@ -1,4 +1,4 @@
-module github.com/spacetimi/timi_shared_server
+module github.com/spacetimi/timi_shared_server/v2
 
 go 1.14
 
