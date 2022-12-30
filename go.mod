@@ -3,7 +3,7 @@ module github.com/spacetimi/timi_shared_server
 go 1.14
 
 require (
-	github.com/aws/aws-sdk-go v1.31.12
+	github.com/aws/aws-sdk-go v1.33.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-redis/redis/v8 v8.0.0-beta.3
 	github.com/gorilla/mux v1.7.4
